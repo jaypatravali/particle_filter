@@ -1,5 +1,5 @@
 # particle_filter
-This repo contains code AIS Project on Semantic Segmentation and Localization using Landmark features
+This repo contains code for AIS Project on Semantic Segmentation and Localization using Landmark features
 
 ## How to setup?
 
@@ -21,7 +21,7 @@ data
 
 ## How to Run?
 
-* Run  using `python main.py`. Options and their help can be found be `python main.py -help`
+* Run  using `python scripts/main.py`. Options and their help can be found be `python main.py -help`
 
 ## What is the structure of the code
 
