@@ -9,11 +9,6 @@ def jointly_compatible(predictions, observations, H):
 	"""
 	d2 = joint_mahalanobis (predictions, observations, H)
 	dof = 2*len(H)
-	# if (d2>0.05):
-	# 	return False
-	# else:
-	# 	return True
-
 	return d2 < chi2.isf(q= 0.01, df = dof)
 
 def joint_mahalanobis(predictions, observations,H):
@@ -45,31 +40,3 @@ def joint_mahalanobis(predictions, observations,H):
 	return joint_distance
 
 
-	# print(Z, "hk", h_fn)
-	# sizing = len(Z)
-	# C_inv_K = np.eye(sizing, sizing)
-
-	# # look for all non zero values in H
-	# # i,j = find(H)
-	# # i = row value
-	# # j=
-	# # iter_list = non_zero_indices(H, lambda x:x)
-	# idx_list = np.nonzero(H)[0].tolist()
-	# for i in idx_list:
-	# 	print("helo inside", observations, predictions )
-	# 	zk = observations['z'][i]
-	# 	hk = predictions['h_map_fn'][idx_list[i]]
-	# 	#Rk = observations['R_covariance'][]
-	# 	Z.append(zk)
-    #
-	# 	h_fn.append(hk)
-	# 	# for j in
-	# 	# C_inv_K = np.linalg.inv(Ck)
-    #
-	# # Ck = np.add(predictions['H_P_H'], Rk)
-	# # C_inv_K = np.linalg.inv(Ck)
-	# # C_inv_K = C_inv_K.tolist()
-	# print(Z,h_fn)
-	# C_inv_K = 1
-	# joint_distance = mahalanobis (Z , h_fn, C_inv_K)
-	# return joint_distance
