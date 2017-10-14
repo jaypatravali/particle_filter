@@ -1,0 +1,92 @@
+import numpy as np
+import math
+
+def observation_model(sensor_data, particles):
+	"""For visible landmarks get Sensor Readings
+	and add Gaussian Noise.
+	"""
+	observations = dict()
+	R_covariance = []
+	z = []
+	#measured landmark ids and ranges
+	ids = sensor_data['id']
+	ranges = sensor_data['range']
+	bearing = sensor_data['bearing']
+	for particle in particles:
+		for i in range(len(ranges)):
+			z.append(ranges[i])
+			#R_covariance.append(np.array([[1,0], [0,1]])
+			R_covariance.append(np.array([1]))
+	observations = {'M':len(z), 'z':z, "R_covariance": R_covariance, "GT":ids }
+
+	return observations
+
+
+def prediction_model(sensor_data, particles, particles_prev, P_noise_cov, odometry, landmarks):
+	"""
+	Predict Sensor Measuremets
+	TODO: Add Motion Noise
+	"""
+	predictions  = dict()
+
+	h_map_fn = [] # function
+	H_P_H = []
+	H = []
+	sigma_r = 0.2
+	Q = np.array([[0.2, 0.0, 0.0],\
+				[0.0, 0.2, 0.0],\
+				[0.0, 0.0, 0.2]])
+
+	delta_rot1 = odometry['r1']
+	delta_trans = odometry['t']
+	delta_rot2 = odometry['r2']
+
+
+	P = []
+	# currently noise free motion 
+	# Here P is the list of Pose Uncertainity for each particles.
+	for particle_prev in particles_prev:
+		new_particle = dict()
+		H =  np.array([[1.0, 0.0, -delta_trans * np.sin(particle_prev['theta'] + delta_rot1)],\
+						[0.0, 1.0, delta_trans * np.cos(particle_prev['theta'] + delta_rot1)],\
+						[0.0, 0.0, 1.0]])
+
+		H_P_H_i = np.dot(np.dot(H,P_noise_cov), np.transpose(H)) + Q
+		P.append(H_P_H_i)
+
+    # P size:  3x3xparticle_nos
+	#measured landmark ids and ranges
+	ids = sensor_data['id']
+	ranges = sensor_data['range']
+	bearing = sensor_data['bearing']
+
+	H =[]
+
+	Pre_ids = []
+	mapper_ids = []
+	for particle in particles:
+		#loop for each observed landmark
+		for i in range(len(ids)):
+			lm_id = ids[i]
+			meas_range = ranges[i]
+			meas_bearing = bearing[i]
+
+			lx = landmarks[lm_id][0]
+			ly = landmarks[lm_id][1]
+			px = particle['x']
+			py = particle['y']
+			ptheta = particle['theta']
+
+			#calculate expected range measurement
+			meas_range_exp = np.sqrt( (lx - px)**2 + (ly - py)**2 ) # meas_bearing_exp = math.atan2((ly - py),(lx - px)) - ptheta
+			H_i = np.array([(px-lx)/meas_range_exp , (py-ly)/meas_range_exp , 0 ])
+
+			H.append(H_i)
+			h_map_fn.append(meas_range_exp)
+			Pre_ids.append(i)
+			mapper_ids.append(lm_id)
+
+		H_P_H = np.dot(np.dot(H, P ), np.transpose(H))
+		predictions = {'N':len(h_map_fn), 'h_map_fn':h_map_fn, "H_P_H": H_P_H, "ID":ids, "mapper_ids":mapper_ids }
+
+	return predictions

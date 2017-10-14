@@ -1,0 +1,220 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+
+def plot_trajectories(odom_readings, curr_pose_x, curr_pose_y,landmarks, map_limits):
+
+    odomx = []
+    odomy = []
+    for i in range(len(odom_readings)):
+        odomx.append(odom_readings[i][0])
+        odomy.append(odom_readings[i][1])
+
+    # landmark positions
+    lx=[]
+    ly=[]
+
+    for i in range (len(landmarks)):
+        lx.append(landmarks[i+1][0])
+        ly.append(landmarks[i+1][1])
+
+    plt.figure(2)
+
+
+    # im = plt.imread('../map/sat_img.png')
+    # implot = plt.imshow(im)
+
+    curr_pose_x[0] = odomx[0]
+    curr_pose_y[0]  = odomy[0]
+    plt.plot(lx, ly, 'go',markersize=5)
+
+    plt.plot(curr_pose_x[0], curr_pose_y[0],  marker='x', markersize=5, color="black")
+    p1, = plt.plot(curr_pose_x,curr_pose_y,  marker='.', markersize=3, color="red")
+    p2, = plt.plot(odomx,odomy, marker='.', markersize=3, color="blue")
+
+    plt.legend([p1,p2], ['PF trajectory', 'Odometry Ground truth'])
+    # plt.legend([p1], ['PF trajectory'])
+
+    plt.axis(map_limits)
+
+    err_sum = 0
+    #plot differences
+    for i in range(len(odomx)):
+        err_x =  odomx[i] - curr_pose_x[i]
+        err_y =  odomy[i] - curr_pose_y[i]
+        abs_arr = np.sqrt(err_x**2 + err_y**2)
+        err_sum  = err_sum + abs_arr
+
+    mean = err_sum/len(odomx)
+
+    bracket_dev = []
+
+    for i in range(len(odomx)):
+        err_x =  odomx[i] - curr_pose_x[i]
+        err_y =  odomy[i] - curr_pose_y[i]
+        abs_arr = np.sqrt(err_x**2 + err_y**2)
+        bracket_dev.append((abs_arr-mean)**2)
+
+    std_dev = np.sqrt(sum(bracket_dev)/ len(bracket_dev))
+    print(std_dev, mean)
+
+
+
+def plot_trajectories_v2(o1, curr_pose_x, curr_pose_y,landmarks, map_limits):
+
+
+    # landmark positions
+    lx=[]
+    ly=[]
+
+    for i in range (len(landmarks)):
+        lx.append(landmarks[i+1][0])
+        ly.append(landmarks[i+1][1])
+
+    plt.figure(2)
+
+
+    # im = plt.imread('../map/sat_img.png')
+    # implot = plt.imshow(im)
+
+    plt.plot(lx, ly, 'g*',markersize=5)
+
+    p1, = plt.plot(curr_pose_x,curr_pose_y,  marker='o', markersize=5, color="red")
+    p2, = plt.plot(o1[0],o1[1], marker='x', markersize=7, color="blue")
+
+    plt.legend([p1,p2], ['PF trajectory', 'Odometry Ground truth'])
+    # plt.legend([p1], ['PF trajectory'])
+
+    # plt.axis(map_limits)
+
+def plot_trajectories_v3(sensor_readings , cx, cy, landmarks, map_limits):
+
+
+    # landmark positions
+    lx=[]
+    ly=[]
+
+    for i in range (len(landmarks)):
+        lx.append(landmarks[i+1][0])
+        ly.append(landmarks[i+1][1])
+
+    plt.figure(2)
+    plt.plot(lx, ly, 'g*',markersize=5)
+
+    plt.plot(cx,cy,  marker='o', markersize=5, color="red")
+
+    plt.axis(map_limits)
+    plt.ion()
+
+    plt.pause(0.05)
+
+
+
+import gmplot
+import numpy as np
+import utm
+import math
+
+def plot_on_maps(curr_pose_x, curr_pose_y):
+
+    gmap = gmplot.GoogleMapPlotter(48.013497, 7.834188, 15)
+
+    # Landmarks
+
+    filename = '../map/landmarks.txt' 
+    f = open(filename)
+
+    lmx = []
+    lmy = []
+
+    for line in f:
+        line_s  = line.split('\n')
+        line_spl  = line_s[0].split()
+        lx, ly = float(line_spl[1]),float(line_spl[2])
+        lmx.append(lx)
+        lmy.append(ly)
+
+    gmap.scatter(lmx, lmy, 'k', marker=True)
+
+    #odom 
+    filename = '../map/odom_latlon.txt' 
+
+    f = open(filename)
+
+    odomx = []
+    odomy = []
+
+    for line in f:
+        line_s  = line.split('\n')
+        line_spl  = line_s[0].split()
+        odx, ody  = float(line_spl[0]),float(line_spl[1])
+        odomx.append(odx)
+        odomy.append(ody)
+
+    gmap.plot(odomx, odomy, 'green', edge_width=3)
+
+
+    #PF Predictions 
+
+
+    ro1 = 413210.76645718445
+    ro2 = 5318363.85196627
+
+    to1 = 413058.940761621
+    to2 = 5318228.741414887
+
+
+    angle = math.atan2(ro2,ro1)
+    c = np.cos(angle)
+    s = np.sin(angle)
+
+
+    re_poseX = []
+    re_poseY = []
+    # for i in range(len(curr_pose_x)): 
+    #     print(curr_pose_x, curr_pose_y)
+    #     x = (curr_pose_x[i] + to1)
+    #     y = (curr_pose_y[i] + to2)
+
+
+    #     # rx = x*c - y*s
+    #     # ry = x*s + y*c
+    #     # print(rx,ry)
+
+
+    #     # rx = curr_pose_x[i]*c - curr_pose_y[i]*s
+    #     # ry = curr_pose_x[i]*s + curr_pose_y[i]*c
+
+    #     # x = rx - to1
+    #     # y = ry - to2
+    #     # print(x,y)
+
+    #     x,y = utm.to_latlon(x,y, 32, zone_letter='U')
+    #     print(x,y)
+    print(curr_pose_x[0], curr_pose_y[0] )
+
+    x = (ro1 + curr_pose_x[0])
+    y = (ro2 + curr_pose_y[0] )
+
+
+    # rx = x*c - y*s
+    # ry = x*s + y*c
+    # print(rx,ry)
+
+
+    # rx = curr_pose_x[i]*c - curr_pose_y[i]*s
+    # ry = curr_pose_x[i]*s + curr_pose_y[i]*c
+
+    # x = rx - to1
+    # y = ry - to2
+    # print(x,y)
+
+    x,y = utm.to_latlon(x,y, 32, zone_letter='U')
+    print(x,y)
+
+    re_poseX.append(x)
+    re_poseY.append(y)
+
+    gmap.plot(re_poseX, re_poseY, 'red', edge_width=3)
+
+    gmap.draw("../results/mymap.html")

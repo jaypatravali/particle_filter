@@ -1,0 +1,156 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from motion_model import sample_motion_model
+from sensor_model import eval_sensor_model
+from resampler import resample_particles
+from plotter import plot_state 
+from read_data import read_world, read_sensor_data
+
+
+#add random seed for generating comparable pseudo random numbers
+np.random.seed(123)
+
+#plot preferences, interactive plotting mode
+plt.axis([-1, 12, 0, 10])
+plt.ion()
+plt.show()
+
+def initialize_particles(num_particles, map_limits):
+    # randomly initialize the particles inside the map limits
+    particles = []
+    
+    for i in range(num_particles):
+        particle = dict()
+        # draw x,y and theta coordinate from uniform distribution
+        # inside map limits
+        particle['x'] = np.random.uniform(map_limits[0], map_limits[1])
+        particle['y'] = np.random.uniform(map_limits[2], map_limits[3])
+        particle['theta'] = np.random.uniform(-np.pi, np.pi)
+        particles.append(particle)
+    return particles
+
+
+
+def main():
+    # implementation of a particle filter for robot pose estimation
+
+    print "Reading landmark positions"
+    landmarks = read_world("../data/world.dat")
+
+    print "Reading sensor data"
+    sensor_readings = read_sensor_data("../data/sensor_data.dat")
+
+    #initialize the particles
+    map_limits = [-1, 12, 0, 10]
+    particles = initialize_particles(1000, map_limits)
+
+    #run particle filter
+    for timestep in range(len(sensor_readings)/2):
+
+        #plot the current state
+        plot_state(particles, landmarks, map_limits)
+
+        #predict particles by sampling from motion model with odometry info
+        new_particles = sample_motion_model(sensor_readings[timestep,'odometry'], particles)
+
+        #calculate importance weights according to sensor model
+        weights = eval_sensor_model(sensor_readings[timestep, 'sensor'], new_particles, landmarks)
+
+        #resample new particle set according to their importance weights
+        particles = resample_particles(new_particles, weights)
+
+    plt.show('hold')
+
+if __name__ == "__main__":
+    main()
+
+import numpy as np
+import matplotlib.pyplot as plt
+from motion_model import sample_motion_model
+from sensor_model import eval_sensor_model
+from resampler import resample_particles
+from plotter import plot_state , mean_pose
+from read_data import read_world, read_sensor_data
+from plot_trajectories import plot_trajectories, plot_trajectories_v2, plot_trajectories_v3
+import argparse
+
+parser = argparse.ArgumentParser(description='Change parameters')
+
+parser.add_argument('--particles', default=1, type=int, metavar='N',
+                          help='number of particles')
+
+parser.add_argument('--RandomInit', default=False, type=bool,
+                          help='Set Random Particle initialization')
+args = parser.parse_args()
+
+#add random seed for generating comparable pseudo random numbers
+np.random.seed(123)
+
+
+
+#plot preferences, interactive plotting mode
+# plt.axis([-1, 12, 0, 10])
+plt.ion()
+# plt.show()
+
+def initialize_particles(num_particles, map_limits):
+    # randomly initialize the particles inside the map limits
+    particles = []
+    
+    for i in range(num_particles):
+        particle = dict()
+        # draw x,y and theta coordinate from uniform distribution
+        # # inside map limits
+
+        if (args.RandomInit=='True'):
+            particle['x'] = np.random.uniform(map_limits[0], map_limits[1])
+            particle['y'] = np.random.uniform(map_limits[2], map_limits[3])
+            particle['theta'] = np.random.uniform(-np.pi, np.pi)
+        else:
+            particle['x'] = 1
+            particle['y'] = 1
+            particle['theta'] = 0
+        particles.append(particle)
+    return particles
+
+
+
+def main():
+    # implementation of a particle filter for robot pose estimation
+
+    print "Reading landmark positions"
+    landmarks = read_world("../data/world.dat")
+
+    print "Reading sensor data"
+    sensor_readings = read_sensor_data("../data/sensor_data.dat")
+
+    #initialize the particles
+    map_limits = [-1, 12, 0, 10]
+    particles = initialize_particles(args.particles, map_limits)
+
+    curr_pose_x = []
+    curr_pose_y = []
+
+    #run particle filter
+    for timestep in range(len(sensor_readings)/2):
+
+        #plot the current state
+        # plot_state(particles, landmarks, map_limits)
+
+        #predict particles by sampling from motion model with odometry info
+        new_particles = sample_motion_model(sensor_readings[timestep,'odometry'], particles)
+
+        #calculate importance weights according to sensor model
+        weights = eval_sensor_model(sensor_readings[timestep, 'sensor'], new_particles, landmarks)
+
+        #resample new particle set according to their importance weights
+        particles = resample_particles(new_particles, weights)
+
+        cx, cy, _ = mean_pose(particles)
+        plot_trajectories_v3( sensor_readings[timestep, 'odometry'],cx,cy ,landmarks, map_limits)
+
+
+    plt.show('hold')
+
+if __name__ == "__main__":
+    main()
