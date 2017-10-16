@@ -10,10 +10,10 @@ import argparse
 from data_association import data_association
 
 parser = argparse.ArgumentParser(description='Change parameters')
-parser.add_argument('--particles', default=1000, type=int, metavar='N',
+parser.add_argument('--particles', default=1, type=int, metavar='N',
                           help='number of particles')
 
-parser.add_argument('--DA', default="JCBB", type=str, metavar='N',
+parser.add_argument('--DA', default="NN", type=str, metavar='N',
                           help='Search Algorithm: Choose NN or JCBB')
 
 parser.add_argument('--noise', default="False", type=bool, metavar='N',
@@ -79,11 +79,14 @@ def main():
     for timestep in range(len(sensor_readings) / 2):
         # plot the current state
         # plot_state(particles, landmarks, map_limits)
-        
-        # predict particles by sampling from motion model with odometry info
         new_particles = sample_motion_model(sensor_readings[timestep, 'odometry'], particles)
 
-        errors = data_association(sensor_readings[timestep, 'sensor'], new_particles, particles, landmarks, args.DA, cov_noise, sensor_readings[timestep, 'odometry'])
+        # predict particles by sampling from motion model with odometry info
+        if timestep==0:
+            new_particles =particles
+            errors = data_association(sensor_readings[timestep, 'sensor'], new_particles, particles, landmarks, args.DA, cov_noise, sensor_readings[timestep, 'odometry'])
+        else: 
+            errors = data_association(sensor_readings[timestep, 'sensor'], new_particles, particles, landmarks, args.DA, cov_noise, sensor_readings[timestep, 'odometry'])
 
         # calculate importance weights according to sensor model
         weights = eval_sensor_model(sensor_readings[timestep, 'sensor'], new_particles, landmarks)
@@ -96,10 +99,10 @@ def main():
         cx, cy, _ = mean_pose(particles)
         curr_pose_x.append(cx)
         curr_pose_y.append(cy)
-        plot_trajectories_v3( sensor_readings[timestep, 'odometry'],cx,cy ,landmarks, map_limits)
+        # plot_trajectories_v3( sensor_readings[timestep, 'odometry'],cx,cy ,landmarks, map_limits)
         print("Current TimeStep: ", timestep)
         raw_input("Press Enter to continue...")
-    plot_trajectories(odom_readings, curr_pose_x,curr_pose_y ,landmarks, map_limits)
+    # plot_trajectories(odom_readings, curr_pose_x,curr_pose_y ,landmarks, map_limits)
     # plot_on_maps(curr_pose_x, curr_pose_y)
     plt.show('hold')
 
