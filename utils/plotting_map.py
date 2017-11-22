@@ -21,6 +21,8 @@ angle =  -angle
 c = np.cos(angle)
 s = np.sin(angle)
 
+print(angle)
+
 limitsx = [] 
 limitsy = []
 
@@ -135,11 +137,15 @@ trans.append(0.01)
 theta = 1.2490457723982544
 delta_rot1 = []
 delta_rot1.append(theta)
+heading = []
+heading.append(theta)
+
 for i in range(len(rOdomx)-1):
 	trans.append(euclidean_dist((rOdomx[i],rOdomy[i]),(rOdomx[i+1],rOdomy[i+1])))
 	del_rot = math.atan2(rOdomy[i+1]- rOdomy[i], rOdomx[i+1]- rOdomx[i]) - theta
 	delta_rot1.append(del_rot)
 	theta = math.atan2(rOdomy[i+1]- rOdomy[i], rOdomx[i+1]- rOdomx[i])
+	heading.append(theta)
 
 for i in delta_rot1:
 	print(i, len(delta_rot1), (i*360/(2*math.pi)))
@@ -153,7 +159,7 @@ for i in range(len(rOdomx)):
 	for key in landmarks:
 		range_val = euclidean_dist((rOdomx[i],rOdomy[i]), (landmarks[key][0],landmarks[key][1]))
 		if (range_val<sensor_range):
-			bearing = math.atan2(landmarks[key][1]- rOdomy[1], landmarks[key][0] - rOdomx[0])
+			bearing = math.atan2(landmarks[key][1]- rOdomy[i], landmarks[key][0] - rOdomx[i]) - heading[i]
 			sensor_read = "SENSOR {} {} {}\n".format(key,range_val,bearing)
 
 			f.write(sensor_read)

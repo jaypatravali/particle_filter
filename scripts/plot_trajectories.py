@@ -2,6 +2,57 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
+
+
+
+
+def plot_trajectories_v3(sensor_data , curr_mean, landmarks, map_limits):
+    # landmark positions
+    lx=[]
+    ly=[]
+
+    for i in range (len(landmarks)):
+        lx.append(landmarks[i+1][0])
+        ly.append(landmarks[i+1][1])
+
+    plt.figure(2)
+    plt.clf()
+    plt.plot(lx, ly, 'g*',markersize=5)
+
+    ranges = sensor_data['range']
+    bearing = sensor_data['bearing']
+
+
+    for i in range(len(ranges)):
+        x = np.cos(bearing[i])* ranges[i]
+        y = np.sin(bearing[i])* ranges[i]
+        print(x,y)
+        plt.arrow(curr_mean[0],curr_mean[1], x,y, shape='full', lw=3, length_includes_head=True, head_width=.01)
+
+
+    plt.plot(curr_mean[0],curr_mean[1],  marker='o', markersize=5, color="red")
+    # plt.quiver(curr_mean[0], curr_mean[1], np.cos(curr_mean[2]), np.sin(curr_mean[2]), angles='xy',scale_units='xy', width= 0.005)
+
+    plt.axis(map_limits)
+    plt.ion()
+    # plt.show()
+
+    plt.pause(0.00001)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 def plot_trajectories(odom_readings, curr_pose_x, curr_pose_y,landmarks, map_limits):
 
     odomx = []
@@ -86,29 +137,6 @@ def plot_trajectories_v2(o1, curr_pose_x, curr_pose_y,landmarks, map_limits):
     # plt.legend([p1], ['PF trajectory'])
 
     # plt.axis(map_limits)
-
-def plot_trajectories_v3(sensor_readings , cx, cy, landmarks, map_limits):
-
-
-    # landmark positions
-    lx=[]
-    ly=[]
-
-    for i in range (len(landmarks)):
-        lx.append(landmarks[i+1][0])
-        ly.append(landmarks[i+1][1])
-
-    plt.figure(2)
-    plt.plot(lx, ly, 'g*',markersize=5)
-
-    plt.plot(cx,cy,  marker='o', markersize=5, color="red")
-
-    plt.axis(map_limits)
-    plt.ion()
-
-    plt.pause(0.05)
-
-
 
 import gmplot
 import numpy as np

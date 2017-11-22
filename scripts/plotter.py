@@ -2,8 +2,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-
-
 def mean_pose(particles):
     # calculate the mean pose of a particle set.
     #
@@ -33,7 +31,6 @@ def mean_pose(particles):
     mean_x = np.mean(xs)
     mean_y = np.mean(ys)
     mean_theta = np.arctan2(np.mean(vys_theta), np.mean(vxs_theta))
-
     return [mean_x, mean_y, mean_theta]
 
 
