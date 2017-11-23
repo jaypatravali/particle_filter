@@ -110,22 +110,57 @@ def crop_img_resize(list1, list2):
 		cv2.imwrite( dir2+"{}.png".format(i) , res_r)
 		print("Files done: ", i)
 
+
+
+def center_crop_img(list1, list2):
+	dir1 = '/export/patraval/robo_car_new_loop_all/zed_front/left_res1/'
+	dir2= '/export/patraval/robo_car_new_loop_all/zed_front/right_res1/'
+
+	cropx, cropy = 448, 448
+
+	print("Check if Directories are okay [Y/N]")
+	if raw_input()!="Y":
+		exit()
+	print("All good!")
+	for i in range(len(list1)):
+		left = cv2.imread(list1[i])
+		crop_img1 = crop_center(left,cropx,cropy)
+		cv2.imwrite( dir1+"{}.png".format(i) , crop_img1)
+		
+		right = cv2.imread(list2[i])
+		crop_img2 =crop_center(right,cropx,cropy)
+		cv2.imwrite( dir2+"{}.png".format(i) , crop_img2)
+		print("Files done: ", i)
+
+
+def crop_center(img,cropx,cropy):
+	y,x,c = img.shape
+	startx = x//2 - cropx//2
+	starty = y//2 - cropy//2    
+	return img[starty:starty+cropy, startx:startx+cropx, :]
+
+
+
 def unpack_files():
 	left = []
 	right = []
 	disparity = []
 
-	left = [line.rstrip('\n') for line in open('/export/patraval/robo_car_new_loop_all/zed_front/snip_loop/left_test.txt')]
-	right = [line.rstrip('\n') for line in open('/export/patraval/robo_car_new_loop_all/zed_front/snip_loop/network_blend.txt')]
+	# left = [line.rstrip('\n') for line in open('/export/patraval/robo_car_new_loop_all/zed_front/snip_loop/left_test.txt')]
+	# right = [line.rstrip('\n') for line in open('/export/patraval/robo_car_new_loop_all/zed_front/snip_loop/network_blend.txt')]
+
+	left = [line.rstrip('\n') for line in open('/export/patraval/robo_car_new_loop_all/zed_front//left.txt')]
+	right = [line.rstrip('\n') for line in open('/export/patraval/robo_car_new_loop_all/zed_front/right.txt')]
+
 
 	return left, right, disparity
 
 def main():
 	left_list, right_list, disparity_list =  unpack_files()
-	img_resize(left_list, right_list)
+	# img_resize(left_list, right_list)
 	# crop_img(left_list, right_list)
 	# crop_img_resize(left_list, right_list)
-
+	center_crop_img(left_list, right_list)
 	# compute_disparity()
 
 if __name__ == "__main__":

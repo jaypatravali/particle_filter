@@ -9,7 +9,7 @@ from read_data import read_world, read_sensor_data, read_odom
 from plot_trajectories import plot_trajectories, plot_trajectories_v2, plot_trajectories_v3, plot_on_maps
 from data_association import data_association
 from visualization import Visualization
-
+from seg_utils import seg_pipeline
 # add random seed for generating comparable pseudo random numbers
 np.random.seed(123)
 
@@ -39,7 +39,8 @@ class Particle_Filter():
             curr_pose_x.append(curr_mean[0])
             curr_pose_y.append(curr_mean[1])
             # self.vis.robot_environment(timestep, new_particles, curr_mean)
-            vis.robot_environment(timestep, new_particles, curr_mean)
+            # vis.robot_environment(timestep, new_particles, curr_mean)
+            vis.debugger(timestep,  curr_mean)
 
             # predict particles by sampling from motion model with odometry info
             # if timestep==0:
@@ -59,22 +60,25 @@ class Particle_Filter():
         plot_on_maps(curr_pose_x, curr_pose_y)
         plt.show('hold')
 
-    def process_realtime(self):
+    def process_realtime(self, num_particles):
+        curr_pose_x = []
+        curr_pose_y = []
         particles, landmarks = self.initialize_particles_landmarks(num_particles)
-    
-        while(len(sensor_readings)>0):
-            sensor_readings, odom_readings =  self.read_data_realtime()
-
+        sensor_readings, odom_readings  = self.read_data_disk()
+        vis = Visualization(landmarks, self.map_limits, sensor_readings, odom_readings)
+        seg_obj = seg_pipeline.Segmentation_Pipeline(True)
+        for timestep in range(len(sensor_readings) / 2):
             # plot_state(particles, landmarks, map_limits)
             # curr_mean = mean_pose(particles)
             # curr_pose_x.append(curr_mean[0])
             # curr_pose_y.append(curr_mean[1])
-            new_particles = sample_motion_model(sensor_readings['odometry'], particles)
-
+            new_particles = sample_motion_model(sensor_readings[timestep, 'odometry'], particles)
             curr_mean = mean_pose(new_particles)
             curr_pose_x.append(curr_mean[0])
             curr_pose_y.append(curr_mean[1])
-
+            # vis.robot_environment(timestep, new_particles, curr_mean)
+            vis.debugger(timestep,  curr_mean)
+            seg_obj.start_process_realtime(timestep)
             # predict particles by sampling from motion model with odometry info
             # if timestep==0:
             #     new_particles =particles
@@ -82,17 +86,16 @@ class Particle_Filter():
             # else: 
             #     errors = data_association(sensor_readings[timestep, 'sensor'], new_particles, particles, landmarks, args.DA, cov_noise, sensor_readings[timestep, 'odometry'])
 
-            weights = eval_sensor_model(sensor_readings[ 'sensor'], new_particles, landmarks)
+            weights = eval_sensor_model(sensor_readings[timestep, 'sensor'], new_particles, landmarks)
+            
             # weights = weighting_model(errors)
+
             particles = resample_particles(new_particles, weights)
             print("Current TimeStep: ", timestep)
-            raw_input("Press Enter to continue...")
-
-        plot_trajectories(odom_readings, curr_pose_x,curr_pose_y ,landmarks, self.map_limits)
-        plot_on_maps(curr_pose_x, curr_pose_y)
+            # raw_input("Press Enter to continue...")
+        # plot_trajectories(odom_readings, curr_pose_x,curr_pose_y ,landmarks, self.map_limits)
+        # plot_on_maps(curr_pose_x, curr_pose_y)
         plt.show('hold')
-
-
 
 
     def initialize_particles_landmarks(self,  num_particles): 

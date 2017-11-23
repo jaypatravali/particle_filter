@@ -18,19 +18,31 @@ class Segmentation_Pipeline():
 			# self.extractor.display_final_image(self.transformer.vehicle_coords_base, self.transformer.pop_index, points)
 			# raw_input("Press Enter to continue...")
 
-	def start_process_realtime(self):
-		for i in range(70, len(self.extractor.out_list)):
-			points  = self.extractor.execute_extraction(i)
-			self.transformer.point_transformation(points, i+6000)
-			print("Processed: ", i+ 6000)
-			self.extractor.display_final_image(self.transformer.vehicle_coords_base, self.transformer.pop_index, points)
-			# print("yo", self.transformer.sensor_readings, self.transformer.odom_readings)
-			# return self.transformer.sensor_readings, self.transformer.odom_readings
+	# def start_process_realtime(self):
+	# 	for i in range(70, len(self.extractor.out_list)):
+	# 		points  = self.extractor.execute_extraction(i)
+	# 		self.transformer.point_transformation(points, i+6000)
+	# 		print("Processed: ", i+ 6000)
+	# 		self.extractor.display_final_image(self.transformer.vehicle_coords_base, self.transformer.pop_index, points)
+	# 		# print("yo", self.transformer.sensor_readings, self.transformer.odom_readings)
+	# 		# return self.transformer.sensor_readings, self.transformer.odom_readings
+
+	def start_process_realtime(self, index):
+		# for i in range(70, len(self.extractor.out_list)):
+		points  = self.extractor.execute_extraction(index)
+		self.transformer.point_transformation(points, index+6000)
+		print("Processed: ", index+ 6000)
+		self.extractor.display_final_image(self.transformer.vehicle_coords_base, self.transformer.pop_index, points)
+
+
+
 
 def main():
-	seg_obj = Segmentation_Pipeline(True)
-	seg_obj.start_process_realtime()
+	# seg_obj = Segmentation_Pipeline(True)
+	# seg_obj.start_process_realtime()
 
+	seg_obj = Segmentation_Pipeline()
+	seg_obj.start_process_disk()
 
 if __name__ == "__main__":
 	try:  

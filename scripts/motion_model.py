@@ -24,14 +24,14 @@ def sample_motion_model(odometry, particles):
 
 
 		#sample noisy motions
-		noisy_delta_rot1 = delta_rot1 + np.random.normal(0, sigma_delta_rot1)
-		noisy_delta_trans = delta_trans + np.random.normal(0, sigma_delta_trans)
-		noisy_delta_rot2 = delta_rot2 + np.random.normal(0, sigma_delta_rot2)
+		# noisy_delta_rot1 = delta_rot1 + np.random.normal(0, sigma_delta_rot1)
+		# noisy_delta_trans = delta_trans + np.random.normal(0, sigma_delta_trans)
+		# noisy_delta_rot2 = delta_rot2 + np.random.normal(0, sigma_delta_rot2)
 
 		#sample noise free motions
-		# noisy_delta_rot1 = delta_rot1 
-		# noisy_delta_trans = delta_trans
-		# noisy_delta_rot2 = delta_rot2 
+		noisy_delta_rot1 = delta_rot1 
+		noisy_delta_trans = delta_trans
+		noisy_delta_rot2 = delta_rot2 
 
 
 		#calculate new particle pose

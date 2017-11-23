@@ -1,7 +1,7 @@
 import sys
 from particle_filter import Particle_Filter
 import argparse
-
+import cv2
 parser = argparse.ArgumentParser(description='Change parameters')
 
 parser.add_argument('--particles', default=1000, type=int, metavar='N',
@@ -10,7 +10,7 @@ parser.add_argument('--DA', default="NN", type=str, metavar='N',
                           help='Search Algorithm: Choose NN or JCBB')
 parser.add_argument('--noise', default="False", type=bool, metavar='N',
                           help='Add Measurement and Motion Noise?   ')
-parser.add_argument('--mode', default="car", type=str, metavar='N',
+parser.add_argument('--mode', default="sim", type=str, metavar='N',
                           help='Use sim or car data')
 parser.add_argument('--play', default="disk", type=str, metavar='N',
                           help='Data from disk or realtime')
@@ -24,8 +24,8 @@ def main():
 
     if args.play=='realtime':
         pf.process_realtime(args.particles)
-        
-    pf.process_disk(args.particles)
+    else:     
+      pf.process_disk(args.particles)
 
 
 if __name__ == "__main__":
@@ -33,4 +33,5 @@ if __name__ == "__main__":
         main()
     except KeyboardInterrupt:
         print("Qutting...")
+        cv2.destroyAllWindows()
         sys.exit()

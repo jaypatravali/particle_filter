@@ -72,7 +72,7 @@ class Extraction():
 		vis = np.concatenate(( self.overlay, vis), axis=1)
 		cv2.imshow("Real-Time",vis )
 		# cv2.imshow("Real-Time Overlay",res_overlay)
-		cv2.waitKey(0)
+		cv2.waitKey(30)
 
 
 	def sort_left_to_right(self,  points, disparity_list):
