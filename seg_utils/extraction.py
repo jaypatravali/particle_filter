@@ -1,24 +1,28 @@
 import numpy as np
-import json
-import os, sys, getopt
-import glob
-import utm  
-import math
 import cv2
 from matplotlib import pyplot as plt
-
 from read_disparity import read_disparity
-
-
-
 
 class Extraction():
 
-
-	def __init__(self):
-		self.out_list, self.overlay_list, self.disparity_list = self.unpack_files()	
+	def __init__(self, cam_type):
 		self.sorted_idx = []
+		if cam_type is 'zed':
+			self.out_file = '/export/patraval/robo_car_new_loop_all/zed_front/snip_loop/left_test.txt'
+			self.net_blend_file = '/export/patraval/robo_car_new_loop_all/zed_front/snip_loop/network_blend.txt'
+			self.disparity_file = '/export/patraval/robo_car_new_loop_all/zed_front/snip_loop/disparity.txt'
+			self.resize_height, self.resize_width = 640, 1280
+		elif cam_type is 'pg':
+			# self.out_file = '/export/patraval/robo_car_loop2/pg_cam/snip_loop/left_test.txt'
+			# self.net_blend_file = '/export/patraval/robo_car_loop2/pg_cam/snip_loop/network_blend.txt'
+			# self.disparity_file = '/export/patraval/robo_car_loop2/pg_cam/snip_loop/disparity.txt'
+			self.out_file = '/export/patraval/robo_car_loop2/pg_cam/snip_loop/left_test.txt'
+			self.net_blend_file = '/export/patraval/robo_car_loop2/pg_cam/snip_loop/network_blend.txt'
+			self.disparity_file = '/export/patraval/robo_car_loop2/pg_cam/snip_loop/disparity.txt'
 
+
+			self.resize_height, self.resize_width = 1024, 2048
+		self.out_list, self.overlay_list, self.disparity_list = self.unpack_files()	
 
 	def execute_extraction(self, index):
 		src, self.overlay, disparity = self.read_img(self.out_list[index], self.overlay_list[index], self.disparity_list[index],0 )
@@ -33,37 +37,57 @@ class Extraction():
 		src_clone = src.copy()
 		self.image = src_clone
 		contours = self.get_contours(src_clone, img, 0)
-		# fitting_shapes(img,  contours)
-		# centroid = compute_moments(src,  contours, 0)
-		# extremities(src,  contours, 1)
-		# area_all(src, contours, centroid, 1)
-		# mouse_pointer(disparity, 1)
-		# if len(contours)> 6:
 		contours = self.filter_by_area(src, contours, 0)
-
 		final_cont, disparity_list, centre_list  =  self.filter_by_disparity(src, disparity, contours, 0)
+	
+		final_cont, disparity_list, centre_list = self.expensive_disparity(final_cont, disparity_list, centre_list)
+		# final_cont, disparity_list, centre_list = self.expensive_x(final_cont, disparity_list, centre_list)
+
 		low_points = self.lowest_point_get(final_cont)
-		# print(" After filter disparity_list", [int(i) for i in disparity_list] )
 		disparity_list = [i/256 for i in disparity_list]
-		# self.extractor_out = src_clone
 		points  = self.compose_point_list(src_clone, disparity_list, low_points, centre_list, 0 )
 		self.extractor_out = src_clone.copy()
 		# self.sorted_idx = self.sort_left_to_right(points, disparity_list)
 		return points
 
-	def img_resize(self,src, img, overlay):
-		height, width = 640, 1280
-		res_img = cv2.resize(img,(width, height), interpolation = cv2.INTER_CUBIC)
-		res_overlay = cv2.resize(overlay,(width, height), interpolation = cv2.INTER_CUBIC)
-		res_src = cv2.resize(src,(width, height), interpolation = cv2.INTER_CUBIC)
 
+	def expensive_x(self, final_cont, disparity_list, centre_list):
+		new_d = []
+		new_c = []
+		new_cont = []
+		for i in range(len(disparity_list)):
+			if centre_list[i][0] <  740:
+				new_d.append(disparity_list[i])
+				new_c.append(centre_list[i])
+				new_cont.append(final_cont[i])
+
+		return  new_cont, new_d, new_c
+
+	def expensive_disparity(self, final_cont, disparity_list, centre_list):
+		new_d = []
+		new_c = []
+		new_cont = []
+
+		for i in range(len(disparity_list)):
+			if disparity_list[i] > 1356.8:
+				new_d.append(disparity_list[i])
+				new_c.append(centre_list[i])
+				new_cont.append(final_cont[i])
+
+		return  new_cont, new_d, new_c
+
+
+	def img_resize(self,src, img, overlay):
+		res_img = cv2.resize(img,(self.resize_width, self.resize_height), interpolation = cv2.INTER_CUBIC)
+		res_overlay = cv2.resize(overlay,(self.resize_width, self.resize_height), interpolation = cv2.INTER_CUBIC)
+		res_src = cv2.resize(src,(self.resize_width, self.resize_height), interpolation = cv2.INTER_CUBIC)
 		return res_src, res_img, res_overlay
 
 	def display_final_image(self, vehicle_coords, pop_index, points):
 		for i in range(len(vehicle_coords)):
 			if i not in pop_index:
 				cv2.arrowedLine(self.image, (points[i][0]+40, points[i][1]+5), (points[i][0]+20, points[i][1]+5), (0,0,255), 1)
-				print(vehicle_coords[i][0:2], " D: ", points[i][2])
+				# print(vehicle_coords[i][0:2], " D: ", points[i][2])
 
 		self.image = cv2.resize(self.image,(640, 320), interpolation = cv2.INTER_CUBIC)
 		self.extractor_out = cv2.resize(self.extractor_out,(640, 320), interpolation = cv2.INTER_CUBIC)
@@ -72,7 +96,7 @@ class Extraction():
 		vis = np.concatenate(( self.overlay, vis), axis=1)
 		cv2.imshow("Real-Time",vis )
 		# cv2.imshow("Real-Time Overlay",res_overlay)
-		cv2.waitKey(30)
+		cv2.waitKey(0)
 
 
 	def sort_left_to_right(self,  points, disparity_list):
@@ -95,7 +119,7 @@ class Extraction():
 			disp_value =  disparity[cy, cx]*256
 			centre_list.append([cx,cy])
 			disparity_list.append(disp_value)
-			cv2.putText(src, str(int(disp_value)), (cx,cy), cv2.FONT_HERSHEY_SIMPLEX, 6, (255,255, 255), 1)
+			cv2.putText(src, str(round(disp_value,2)), (cx,cy), cv2.FONT_HERSHEY_SIMPLEX, 6, (255,255, 255), 1)
 
 		self.display([src], ["filter_by disp"], show)	    
 		# print(" Before disparity_list", [int(i) for i in disparity_list] )
@@ -161,7 +185,7 @@ class Extraction():
 			Y = (centre_list[i][1] + low_points[i][1])/2
 			D = disparity_list[i]
 			points.append([X,Y,D])
-			cv2.putText(src, str(int(D)), (X,Y), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255, 255), 1)
+			cv2.putText(src, str(round(D,2)), (X,Y), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255, 255), 1)
 		self.display([src], ["composer"], show)	    
 		return points
 
@@ -177,16 +201,12 @@ class Extraction():
 	def lowest_point_compare_(self, i, j, filtered):
 		p1 =  filtered[i][filtered[i][:,:,1].argmax()][0]
 		p2 =  filtered[j][filtered[j][:,:,1].argmax()][0]
-
+	
 	def unpack_files(self):
 		out_list, overlay_list, disparity_list = [],[],[]
-		out_list = [line.rstrip('\n') for line in open('/export/patraval/robo_car_new_loop_all/zed_front/snip_loop/left_test.txt')]
-		overlay_list = [line.rstrip('\n') for line in open('/export/patraval/robo_car_new_loop_all/zed_front/snip_loop/network_blend.txt')]
-		# disparity_list = [line.rstrip('\n') for line in open('/export/patraval/robo_car_new_loop_all/zed_front/snip_loop/disparity.txt')]
-
-		# out_list = [line.rstrip('\n') for line in open('/export/patraval/robo_car_new_loop_all/zed_front/snip_loop/left_test_upsample.txt')]
-		# overlay_list = [line.rstrip('\n') for line in open('/export/patraval/robo_car_new_loop_all/zed_front/snip_loop/network_blend_upsample.txt')]	
-		disparity_list = [line.rstrip('\n') for line in open('/export/patraval/robo_car_new_loop_all/zed_front/snip_loop/disparity_upsample.txt')]
+		out_list = [line.rstrip('\n') for line in open(self.out_file)]
+		overlay_list = [line.rstrip('\n') for line in open(self.net_blend_file)]
+		disparity_list = [line.rstrip('\n') for line in open(self.disparity_file)]
 		return out_list, overlay_list, disparity_list
 
 	def read_img(self,  test_output, overlay_file, disparity_file, show):
@@ -344,31 +364,3 @@ class Extraction():
 
 		if event == cv2.EVENT_LBUTTONDOWN:
 			print("x,y", y,x)
-
-
-
-
-# def template_matching():
-
-# result = cv2.matchTemplate(scanline, patch, cv2.TM_CCOEFF)
-
-# # template = cv2.imread('template.jpg',0)
-# # w, h = template.shape[::-1]
-# # # methods = ['cv2.TM_CCOEFF', 'cv2.TM_CCOEFF_NORMED', 'cv2.TM_CCORR',
-# # #             'cv2.TM_CCORR_NORMED', 'cv2.TM_SQDIFF', 'cv2.TM_SQDIFF_NORMED']
-# #    img = img2.copy()
-# #    # Apply template Matching
-# #    res = cv2.matchTemplate(img,template,method)
-# #    min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
-# #    # If the method is TM_SQDIFF or TM_SQDIFF_NORMED, take minimum
-# #    if method in [cv2.TM_SQDIFF, cv2.TM_SQDIFF_NORMED]:
-# #        top_left = min_loc
-# #    else:
-# #        top_left = max_loc
-# #    bottom_right = (top_left[0] + w, top_left[1] + h)
-# #    cv2.rectangle(img,top_left, bottom_right, 255, 2)
-# #    plt.subplot(121),plt.imshow(res,cmap = 'gray')
-# #    plt.title('Matching Result'), plt.xticks([]), plt.yticks([])
-# #    plt.subplot(122),plt.imshow(img,cmap = 'gray')
-# #    plt.title('Detected Point'), plt.xticks([]), plt.yticks([])
-

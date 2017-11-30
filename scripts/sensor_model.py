@@ -10,13 +10,11 @@ def eval_sensor_model(sensor_data, particles, landmarks):
 	sigma_r = 0.2
 	sigma_phi = 0.2
 
-	#measured landmark ids and ranges
+	#measured landmark ids and ranges [ known data associations]
 	# ids = sensor_data['id']
-	ids = range(1,48)
-	ranges = sensor_data['range']
-	bearing = sensor_data['bearing']
-
-	weights = []
+	# ranges = sensor_data['range']
+	# bearing = sensor_data['bearing']
+	# weights = []
 
 	#rate each particle
 	# for particle in particles:
@@ -46,6 +44,10 @@ def eval_sensor_model(sensor_data, particles, landmarks):
 	# #normalize weights
 	# normalizer = sum(weights)
 
+	ids = range(1,48)
+	ranges = sensor_data['range']
+	bearing = sensor_data['bearing']
+	weights = []
 
 	for particle in particles:
 		all_meas_likelihood = 1.0 #for combining multiple measurements
@@ -70,14 +72,8 @@ def eval_sensor_model(sensor_data, particles, landmarks):
 			all_meas_likelihood = all_meas_likelihood * meas_likelihood
 
 		weights.append(all_meas_likelihood)
-
 	#normalize weights
 	normalizer = sum(weights)
-
-
-
-
-
 
 	if(normalizer==0):
 		print(normalizer)
@@ -90,6 +86,7 @@ def eval_sensor_model(sensor_data, particles, landmarks):
 
 
 
+
 def euclidean_dist(p1, p2):
 		return(np.sqrt( (p1[0] - p2[0])**2 + (p1[1] - p2[1])**2 ))
 
@@ -97,16 +94,20 @@ def closest_landmark(landmarks, range_val, particle):
 	px = particle['x']
 	py = particle['y']
 	min = 100000000000.0
-	for i in range(1, len(landmarks)+1):
+	for key in landmarks:
 		# print((landmarks[i][0], landmarks[i][1]), (px, py))
-		dist = euclidean_dist((landmarks[i][0], landmarks[i][1]), (px, py))
+		dist = euclidean_dist((landmarks[key][0], landmarks[key][1]), (px, py))
 		diff = abs(dist - range_val)
 		# print(i, diff, range_val, dist)
 		if diff< min:
 			min = diff
-			id = i
+			id = key
 	# print("id",id, "range_val", range_val, "P", (px,py), "landmarks", landmarks[id])
 	return id
+
+
+
+
 
 def weighting_model(errors):
 	normalizer = sum(errors)

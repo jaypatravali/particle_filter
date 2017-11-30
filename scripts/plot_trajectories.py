@@ -1,11 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-
-
-
-
-
 def plot_trajectories_v3(sensor_data , curr_mean, landmarks, map_limits):
     # landmark positions
     lx=[]
@@ -39,21 +34,7 @@ def plot_trajectories_v3(sensor_data , curr_mean, landmarks, map_limits):
 
     plt.pause(0.00001)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-def plot_trajectories(odom_readings, curr_pose_x, curr_pose_y,landmarks, map_limits):
+def plot_trajectories(odom_readings, curr_pose_x, curr_pose_y,landmarks, map_limits, sim_odometry=None):
 
     odomx = []
     odomy = []
@@ -65,9 +46,9 @@ def plot_trajectories(odom_readings, curr_pose_x, curr_pose_y,landmarks, map_lim
     lx=[]
     ly=[]
 
-    for i in range (len(landmarks)):
-        lx.append(landmarks[i+1][0])
-        ly.append(landmarks[i+1][1])
+    for key in  landmarks:
+        lx.append(landmarks[key][0])
+        ly.append(landmarks[key][1])
 
     plt.figure(2)
 
@@ -80,11 +61,23 @@ def plot_trajectories(odom_readings, curr_pose_x, curr_pose_y,landmarks, map_lim
     plt.plot(lx, ly, 'go',markersize=5)
 
     plt.plot(curr_pose_x[0], curr_pose_y[0],  marker='x', markersize=5, color="black")
-    p1, = plt.plot(curr_pose_x,curr_pose_y,  marker='.', markersize=3, color="red")
-    p2, = plt.plot(odomx,odomy, marker='.', markersize=3, color="blue")
 
-    plt.legend([p1,p2], ['PF trajectory', 'Odometry Ground truth'])
-    # plt.legend([p1], ['PF trajectory'])
+    sx=[]
+    sy=[]
+    for key in sim_odometry:
+        sx.append(sim_odometry[key]['x'])
+        sy.append(sim_odometry[key]['y'])
+
+    if sim_odometry is None:
+        p1, = plt.plot(curr_pose_x,curr_pose_y,  marker='.', markersize=3, color="red")
+        p2, = plt.plot(odomx,odomy, marker='.', markersize=3, color="blue")
+        plt.legend([p1,p2], ['PF trajectory', 'Odometry Ground truth'])
+    else:
+        p1, = plt.plot(curr_pose_x,curr_pose_y,  marker='.', markersize=3, color="red")
+        p2, = plt.plot(odomx,odomy, marker='.', markersize=3, color="blue")
+        p3, = plt.plot(sx,sy, marker='.', markersize=3, color="orange")
+        plt.legend([p1,p2,p3], ['PF trajectory', 'Ground truth', 'Noisy Odometry'])
+
 
     plt.axis(map_limits)
 
@@ -199,43 +192,13 @@ def plot_on_maps(curr_pose_x, curr_pose_y):
 
     re_poseX = []
     re_poseY = []
-    # for i in range(len(curr_pose_x)): 
-    #     print(curr_pose_x, curr_pose_y)
-    #     x = (curr_pose_x[i] + to1)
-    #     y = (curr_pose_y[i] + to2)
 
-
-    #     # rx = x*c - y*s
-    #     # ry = x*s + y*c
-    #     # print(rx,ry)
-
-
-    #     # rx = curr_pose_x[i]*c - curr_pose_y[i]*s
-    #     # ry = curr_pose_x[i]*s + curr_pose_y[i]*c
-
-    #     # x = rx - to1
-    #     # y = ry - to2
-    #     # print(x,y)
-
-    #     x,y = utm.to_latlon(x,y, 32, zone_letter='U')
-    #     print(x,y)
     print(curr_pose_x[0], curr_pose_y[0] )
 
     x = (ro1 + curr_pose_x[0])
     y = (ro2 + curr_pose_y[0] )
 
 
-    # rx = x*c - y*s
-    # ry = x*s + y*c
-    # print(rx,ry)
-
-
-    # rx = curr_pose_x[i]*c - curr_pose_y[i]*s
-    # ry = curr_pose_x[i]*s + curr_pose_y[i]*c
-
-    # x = rx - to1
-    # y = ry - to2
-    # print(x,y)
 
     x,y = utm.to_latlon(x,y, 32, zone_letter='U')
     print(x,y)

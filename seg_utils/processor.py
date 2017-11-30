@@ -1,8 +1,4 @@
-import numpy as np
-import os, sys, getopt
-import glob
 import cv2
-from matplotlib import pyplot as plt
 
 
 
@@ -89,8 +85,8 @@ def crop_img(list1, list2):
 
 
 def crop_img_resize(list1, list2):
-	dir1 = '/export/patraval/robo_car_new_loop_all/zed_front/left_res/'
-	dir2= '/export/patraval/robo_car_new_loop_all/zed_front/right_res/'
+	dir1 = '/export/patraval/robo_car_loop2/pg_cam/rect/left_res/'
+	dir2 = '/export/patraval/robo_car_loop2/pg_cam/rect/right_res/'
 
 	height, width = 384, 768
 
@@ -100,12 +96,12 @@ def crop_img_resize(list1, list2):
 	print("All good!")
 	for i in range(len(list1)):
 		left = cv2.imread(list1[i])
-		crop_img1 = left[0:640, 0:1280] 
+		crop_img1 = left[0:1024, 0:2048] 
 		res_l = cv2.resize(crop_img1,(width, height), interpolation = cv2.INTER_CUBIC)
 		cv2.imwrite( dir1+"{}.png".format(i) , res_l)
 		
 		right = cv2.imread(list2[i])
-		crop_img2 = right[0:640, 0:1280] 
+		crop_img2 = right[0:1024, 0:2048] 
 		res_r = cv2.resize(crop_img2,(width, height), interpolation = cv2.INTER_CUBIC)
 		cv2.imwrite( dir2+"{}.png".format(i) , res_r)
 		print("Files done: ", i)
@@ -115,8 +111,8 @@ def unpack_files():
 	right = []
 	disparity = []
 
-	left = [line.rstrip('\n') for line in open('/export/patraval/robo_car_new_loop_all/zed_front/left.txt')]
-	right = [line.rstrip('\n') for line in open('/export/patraval/robo_car_new_loop_all/zed_front/right.txt')]
+	left = [line.rstrip('\n') for line in open('/export/patraval/robo_car_loop2/pg_cam/rect/left_res.txt')]
+	right = [line.rstrip('\n') for line in open('/export/patraval/robo_car_loop2/pg_cam/rect/right_res.txt')]
 
 	return left, right, disparity
 

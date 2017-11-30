@@ -74,7 +74,7 @@ class Visualization():
 
 
 
-	def debugger(self, timestep, mean_pose):
+	def debugger(self, timestep, mean_pose, particles):
 		plt.clf()
 		plt.ion()
 		lx=[]
@@ -93,6 +93,7 @@ class Visualization():
 				bbox_props = dict(boxstyle="circle,pad=0.5", fc="green", ec="g", lw=1, alpha=0.5)
 				plt.text(pos_lx, pos_ly, str(i), bbox=bbox_props)
 
+		self.vis_particles(particles)
 
 
 		plt.plot(lx, ly,  'g.',markersize=5)
@@ -106,9 +107,9 @@ class Visualization():
 			LOCAL_Y = np.sin(bearing[i] + mean_pose[2])* ranges[i]
 			x  = mean_pose[0]  + LOCAL_X
 			y  = mean_pose[1]  + LOCAL_Y
-			print(ranges[i])
 			plt.plot(x, y, marker='o', markersize=5, color="red")
-			print("Local x and y", LOCAL_X, " ", LOCAL_Y, "Global" , x,y)
+			# print("Local x and y", LOCAL_X, " ", LOCAL_Y, "Global" , x,y)
+			# print(ranges[i])
 
 
 

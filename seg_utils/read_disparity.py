@@ -1,11 +1,6 @@
 import numpy as np
 import re
-import sys
-from PIL import Image
-from PIL import ImageOps
 import cv2
-import scipy
-from scipy import ndimage
 
 '''
 Reads Disparity Images stored as PFM files

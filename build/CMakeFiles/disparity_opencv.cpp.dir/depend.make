@@ -4,13 +4,11 @@
 CMakeFiles/disparity_opencv.cpp.dir/src/disparity_opencv.cpp.o: ../src/disparity_opencv.cpp
 CMakeFiles/disparity_opencv.cpp.dir/src/disparity_opencv.cpp.o: /opt/ros/kinetic/include/opencv-3.2.0-dev/opencv/cxcore.h
 CMakeFiles/disparity_opencv.cpp.dir/src/disparity_opencv.cpp.o: /opt/ros/kinetic/include/opencv-3.2.0-dev/opencv2/calib3d.hpp
-CMakeFiles/disparity_opencv.cpp.dir/src/disparity_opencv.cpp.o: /opt/ros/kinetic/include/opencv-3.2.0-dev/opencv2/calib3d/calib3d.hpp
 CMakeFiles/disparity_opencv.cpp.dir/src/disparity_opencv.cpp.o: /opt/ros/kinetic/include/opencv-3.2.0-dev/opencv2/calib3d/calib3d_c.h
 CMakeFiles/disparity_opencv.cpp.dir/src/disparity_opencv.cpp.o: /opt/ros/kinetic/include/opencv-3.2.0-dev/opencv2/core.hpp
 CMakeFiles/disparity_opencv.cpp.dir/src/disparity_opencv.cpp.o: /opt/ros/kinetic/include/opencv-3.2.0-dev/opencv2/core/affine.hpp
 CMakeFiles/disparity_opencv.cpp.dir/src/disparity_opencv.cpp.o: /opt/ros/kinetic/include/opencv-3.2.0-dev/opencv2/core/base.hpp
 CMakeFiles/disparity_opencv.cpp.dir/src/disparity_opencv.cpp.o: /opt/ros/kinetic/include/opencv-3.2.0-dev/opencv2/core/bufferpool.hpp
-CMakeFiles/disparity_opencv.cpp.dir/src/disparity_opencv.cpp.o: /opt/ros/kinetic/include/opencv-3.2.0-dev/opencv2/core/core.hpp
 CMakeFiles/disparity_opencv.cpp.dir/src/disparity_opencv.cpp.o: /opt/ros/kinetic/include/opencv-3.2.0-dev/opencv2/core/core_c.h
 CMakeFiles/disparity_opencv.cpp.dir/src/disparity_opencv.cpp.o: /opt/ros/kinetic/include/opencv-3.2.0-dev/opencv2/core/cuda.hpp
 CMakeFiles/disparity_opencv.cpp.dir/src/disparity_opencv.cpp.o: /opt/ros/kinetic/include/opencv-3.2.0-dev/opencv2/core/cuda.inl.hpp
@@ -69,12 +67,10 @@ CMakeFiles/disparity_opencv.cpp.dir/src/disparity_opencv.cpp.o: /opt/ros/kinetic
 CMakeFiles/disparity_opencv.cpp.dir/src/disparity_opencv.cpp.o: /opt/ros/kinetic/include/opencv-3.2.0-dev/opencv2/flann/saving.h
 CMakeFiles/disparity_opencv.cpp.dir/src/disparity_opencv.cpp.o: /opt/ros/kinetic/include/opencv-3.2.0-dev/opencv2/flann/timer.h
 CMakeFiles/disparity_opencv.cpp.dir/src/disparity_opencv.cpp.o: /opt/ros/kinetic/include/opencv-3.2.0-dev/opencv2/highgui.hpp
-CMakeFiles/disparity_opencv.cpp.dir/src/disparity_opencv.cpp.o: /opt/ros/kinetic/include/opencv-3.2.0-dev/opencv2/highgui/highgui.hpp
 CMakeFiles/disparity_opencv.cpp.dir/src/disparity_opencv.cpp.o: /opt/ros/kinetic/include/opencv-3.2.0-dev/opencv2/highgui/highgui_c.h
 CMakeFiles/disparity_opencv.cpp.dir/src/disparity_opencv.cpp.o: /opt/ros/kinetic/include/opencv-3.2.0-dev/opencv2/imgcodecs.hpp
 CMakeFiles/disparity_opencv.cpp.dir/src/disparity_opencv.cpp.o: /opt/ros/kinetic/include/opencv-3.2.0-dev/opencv2/imgcodecs/imgcodecs_c.h
 CMakeFiles/disparity_opencv.cpp.dir/src/disparity_opencv.cpp.o: /opt/ros/kinetic/include/opencv-3.2.0-dev/opencv2/imgproc.hpp
-CMakeFiles/disparity_opencv.cpp.dir/src/disparity_opencv.cpp.o: /opt/ros/kinetic/include/opencv-3.2.0-dev/opencv2/imgproc/imgproc.hpp
 CMakeFiles/disparity_opencv.cpp.dir/src/disparity_opencv.cpp.o: /opt/ros/kinetic/include/opencv-3.2.0-dev/opencv2/imgproc/imgproc_c.h
 CMakeFiles/disparity_opencv.cpp.dir/src/disparity_opencv.cpp.o: /opt/ros/kinetic/include/opencv-3.2.0-dev/opencv2/imgproc/types_c.h
 CMakeFiles/disparity_opencv.cpp.dir/src/disparity_opencv.cpp.o: /opt/ros/kinetic/include/opencv-3.2.0-dev/opencv2/ml.hpp

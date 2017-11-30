@@ -12,16 +12,13 @@ def observation_model(sensor_data, particle):
 	ids = sensor_data['id']
 	ranges = sensor_data['range']
 	bearing = sensor_data['bearing']
-
 	obs_ids = []
 
 	px = particle['x']
 	py = particle['y']
 	ptheta = particle['theta']
-
 	aplha_R = 0.01
 	alpha_theta = 0.0022
-
 	for i in range(len(ranges)):
 
 		#Noise considerations
