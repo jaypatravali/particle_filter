@@ -25,7 +25,7 @@ class Extraction():
 		self.out_list, self.overlay_list, self.disparity_list = self.unpack_files()	
 
 	def execute_extraction(self, index):
-		src, self.overlay, disparity = self.read_img(self.out_list[index], self.overlay_list[index], self.disparity_list[index],0 )
+		src, self.overlay, disparity = self.read_img(self.out_list[index], self.overlay_list[index], self.disparity_list[index],1 )
 		self.original = src.copy()
 		img = self.process_images(src, disparity)
 		img = self.threshold(img, 0) #Binary threshold
@@ -36,16 +36,17 @@ class Extraction():
 		src, img, self.overlay = self.img_resize(src, img, self.overlay)
 		src_clone = src.copy()
 		self.image = src_clone
-		contours = self.get_contours(src_clone, img, 0)
-		contours = self.filter_by_area(src, contours, 0)
-		final_cont, disparity_list, centre_list  =  self.filter_by_disparity(src, disparity, contours, 0)
+		contours = self.get_contours(src_clone, img, 1)
+		contours = self.filter_by_area(src, contours, 1)
+		final_cont, disparity_list, centre_list  =  self.filter_by_disparity(src, disparity, contours, 1)
 	
 		final_cont, disparity_list, centre_list = self.expensive_disparity(final_cont, disparity_list, centre_list)
 		# final_cont, disparity_list, centre_list = self.expensive_x(final_cont, disparity_list, centre_list)
 
 		low_points = self.lowest_point_get(final_cont)
+		print(disparity_list)
 		disparity_list = [i/256 for i in disparity_list]
-		points  = self.compose_point_list(src_clone, disparity_list, low_points, centre_list, 0 )
+		points  = self.compose_point_list(src_clone, disparity_list, low_points, centre_list, 1 )
 		self.extractor_out = src_clone.copy()
 		# self.sorted_idx = self.sort_left_to_right(points, disparity_list)
 		return points

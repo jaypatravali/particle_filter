@@ -33,8 +33,7 @@ class Particle_Filter():
         sim_odometry = dict()
         if self.data_type is 'sim':
             sim_odometry[0] = {'x':160.52209863 , 'y':7.05611139535,  'theta':0, 'heading':1.2490457723982544, 'trans':0.01 }
-
-
+        # print(particles[0]['x'])
         for timestep in range(len(sensor_readings) / 2):
             # plot_state(particles, landmarks, map_limits)
             # curr_mean = mean_pose(particles)
@@ -129,8 +128,16 @@ class Particle_Filter():
             for i in range(num_particles):
                 particle = dict()
                 # draw x,y and theta coordinate from car starting position
-                particle['x'], particle['y'] = 177.03757970060997,72.711216426459998
-                particle['theta'] = 1.3540745849092297
+                """zed straight"""
+                # particle['x'], particle['y'] = 177.03757970060997,72.711216426459998
+                # particle['theta'] = 1.3540745849092297   ([106.67983715984272, 259.16103693684363], -1.4253166861206177)
+                """pg loop"""
+                particle['x'], particle['y'] = 106.67983715984272, 259.16103693684363
+                particle['theta'] =  -1.4253166861206177  
+
+                """zed loop"""
+                # particle['x'], particle['y'] =  112.21525525427808, 249.03124386039127 
+                # particle['theta'] =  -0.8590560204044709 
                 particle['errors'] = []
                 particles.append(particle)
            

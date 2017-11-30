@@ -44,4 +44,5 @@ if __name__ == "__main__":
 
 
 # added new landmark poles after 70 in landmarks.txt for new loop
-# not sure of 57,56, 58 coz hidden in trees
+# not sure of 57,56, 58 coz hidden in trees near the 
+# extra poles on building from 59-62

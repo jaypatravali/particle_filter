@@ -28,9 +28,9 @@ class State_Transition():
 
 		elif cam_type is 'pg':
 			self.base = 0.50
-			self.cu = 674.03076171875
-			self.cv = 348.81689453125
-			self.f = 698.2396240234375 
+			self.cu = 1010.2511327686972
+			self.cv = 360.8366532960085
+			self.f = 1011.8324475746241
 			self.cam_trans = (1.061, -0.157, 1.372) 
 			self.cam_rot = (-0.484, 0.484, -0.516, 0.516)
 
@@ -42,15 +42,15 @@ class State_Transition():
 	def param_init(self, cam_type):
 		self.filter_radius = 0.9
 		if cam_type is 'zed':
-			self.prev_odom = [177.03757970060997,72.711216426459998]
-			self.car_orientation = 1.3540745849092297
+			# self.prev_odom = [177.03757970060997,72.711216426459998]
+			# self.car_orientation = 1.3540745849092297
 			if self.realtime is False:	
 				self.file = open("../map/sensor_data_car_zed.dat",'w') 
 				self.f1 = open("../map/odom_trajectory_car_zed.dat",'w') 
 
 		elif cam_type is 'pg':
-			self.prev_odom = [177.03757970060997,72.711216426459998]
-			self.car_orientation = 1.3496612278621256
+			# self.prev_odom = [177.03757970060997,72.711216426459998]
+			# self.car_orientation = 1.3496612278621256
 
 			if self.realtime is False:	
 				self.file = open("../map/sensor_data_car_pg.dat",'w') 
@@ -92,8 +92,7 @@ class State_Transition():
 		init_heading = math.atan2(Point_1[1] - Point_0[1], Point_1[0] -Point_0[0])
 		self.prev_odom = Point_0
 		self.car_orientation = init_heading
-		print(self.prev_odom, self.car_orientation)
-
+		print(Point_0, init_heading)
 	def euclidean_dist(self, p1, p2):
 		return(np.sqrt( (p1[0] - p2[0])**2 + (p1[1] - p2[1])**2 ))
 

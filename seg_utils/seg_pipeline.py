@@ -15,9 +15,13 @@ class Segmentation_Pipeline():
 			odom_file = '/export/patraval/robo_car_loop2/pg_cam/gps/fix.txt'
 			self.initial_offset = 5953
 			self.offset_length = 6522
+		
+		self.initial_offset = 1312 #1417
+		self.offset_length =  1360 #6634
 
-		self.initial_offset = 3510
-		self.offset_length = 6634
+		# self.initial_offset = 3510
+		# self.offset_length = 6634
+		print(self.initial_offset, 		self.offset_length)
 		self.transformer = State_Transition(odom_file,  cam_type, self.initial_offset, realtime)
 		self.extractor = Extraction(cam_type)
 
@@ -32,11 +36,11 @@ class Segmentation_Pipeline():
 			# raw_input("Press Enter to continue...")
 
 	def start_process_realtime2(self, index=None):
-		for index in range(self.initial_offset, self.extractor.out_list):
+		for index in range(self.initial_offset, self.offset_length):
 			points  = self.extractor.execute_extraction(index)
 			self.transformer.point_transformation(points, index)
-			print("Processed: ", index+self.initial_offset+6000)
-			# self.extractor.display_final_image(self.transformer.vehicle_coords_base, self.transformer.pop_index, points)
+			print("Processed: ", index)
+			self.extractor.display_final_image(self.transformer.vehicle_coords_base, self.transformer.pop_index, points)
 
 
 	def start_process_realtime(self, index):
@@ -52,8 +56,9 @@ def main():
 	# seg_obj = Segmentation_Pipeline(realtime=True)
 	# seg_obj.start_process_realtime2()
 
-	seg_obj = Segmentation_Pipeline()
-	seg_obj.start_process_disk()
+	seg_obj = Segmentation_Pipeline(cam_type='pg')
+	# seg_obj.start_process_disk()
+	seg_obj.start_process_realtime2()
 
 if __name__ == "__main__":
 	try:  

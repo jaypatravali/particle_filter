@@ -65,12 +65,8 @@ def img_resize(list1, list2):
 
 
 def crop_img(list1, list2):
-	dir1 = '/export/patraval/robo_car_images/pg_cam/rect/crop_left/'
-	dir2= '/export/patraval/robo_car_images/pg_cam/rect/crop_right/'
-
-	height, width = 540, 960
-
-	# height, width = 568, 1024
+	dir1 = '/export/patraval/robo_car_loop2/pg_cam/rect/left/'
+	dir2= '/export/patraval/robo_car_loop2/pg_cam/rect/right/'
 
 
 	for i in range(len(list1)):
@@ -111,16 +107,16 @@ def unpack_files():
 	right = []
 	disparity = []
 
-	left = [line.rstrip('\n') for line in open('/export/patraval/robo_car_loop2/pg_cam/rect/left_res.txt')]
-	right = [line.rstrip('\n') for line in open('/export/patraval/robo_car_loop2/pg_cam/rect/right_res.txt')]
+	left = [line.rstrip('\n') for line in open('/export/patraval/robo_car_loop2/pg_cam/rect/left_rect.txt')]
+	right = [line.rstrip('\n') for line in open('/export/patraval/robo_car_loop2/pg_cam/rect/right_rect.txt')]
 
 	return left, right, disparity
 
 def main():
 	left_list, right_list, disparity_list =  unpack_files()
 	#img_resize(left_list, right_list)
-	# crop_img(left_list, right_list)
-	crop_img_resize(left_list, right_list)
+	crop_img(left_list, right_list)
+	# crop_img_resize(left_list, right_list)
 
 	# compute_disparity()
 
