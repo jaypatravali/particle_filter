@@ -69,7 +69,11 @@ class Visualization():
 		self.vis_particles(particles)
 		self.vis_ground_truth(timestep)
 		self.vis_robot_trajectory( timestep, mean_pose )
-		self.vis_robot_predictions(timestep, mean_pose)		
+		self.vis_robot_predictions(timestep, mean_pose)
+		create_vid = 0
+		if create_vid:
+			plt.savefig('../videos/{}.jpg'.format(timestep))
+		
 		plt.pause(0.00001)
 
 
@@ -118,6 +122,9 @@ class Visualization():
 
 		plt.quiver(mean_pose[0], mean_pose[1], np.cos(mean_pose[2]), np.sin(mean_pose[2]), angles='xy',scale_units='xy')
 
+		create_vid = 0
+		if create_vid:
+			plt.savefig('../videos/{}.jpg'.format(timestep))
 		# plt.plot(mean_pose[0], mean_pose[1], marker='o', markersize=3, color="black")
 
 		# raw_input("Press Enter to continue...")

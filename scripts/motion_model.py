@@ -3,7 +3,7 @@ import math
 np.random.seed(123)
 from sensor_model  import euclidean_dist
 
-def sample_odometry_motion_model(odometry, particles, add_noise, timestep, sim_odometry):
+def sample_odometry_motion_model(odometry, particles, add_noise, timestep, sim_odometry = dict()):
 	# Samples new particle positions, based on old positions, the odometry
 	# measurements and the motion noise
 	# (probabilistic motion models slide 27)
@@ -13,7 +13,9 @@ def sample_odometry_motion_model(odometry, particles, add_noise, timestep, sim_o
 
 	if add_noise:
 	    # the motion noise parameters: [alpha1, alpha2, alpha3, alpha4]
-		noise = [0.05, 0.05, 0.05, 0.05]
+		noise = [0.025, 0.025, 0.025, 0.025]
+		# noise = [0.0, 0.0, 0.0, 0.0]
+	
 		odom_noise =  [0.01,0,0,0.01]
 	else:
 		noise = [0,0,0,0]

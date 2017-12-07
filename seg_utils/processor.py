@@ -45,15 +45,17 @@ def compute_disparity():
 
 
 def img_resize(list1, list2):
-	dir1 = '/export/patraval/robo_car_images/pg_cam/rect/re_left5/'
-	dir2= '/export/patraval/robo_car_images/pg_cam/rect/re_right5/'
+	dir1 = '/export/patraval/robo_car_new_loop_all/zed_front/left_res_orig/'
+	dir2 = '/export/patraval/robo_car_new_loop_all/zed_front/right_res_orig/'
 
-	height, width = 540, 960
+
+	height, width = 384, 768
 
 	# height, width = 568, 1024
 
 
 	for i in range(len(list1)):
+		print("i: ", i)
 		left = cv2.imread(list1[i])
 		res_l = cv2.resize(left,(width,height), interpolation = cv2.INTER_CUBIC)
 		cv2.imwrite( dir1+"{}.png".format(i) , res_l)
@@ -65,11 +67,12 @@ def img_resize(list1, list2):
 
 
 def crop_img(list1, list2):
-	dir1 = '/export/patraval/robo_car_loop2/pg_cam/rect/left/'
-	dir2= '/export/patraval/robo_car_loop2/pg_cam/rect/right/'
+	dir1 = '/export/patraval/robo_car_loop2/pg_cam/rect/left_rect_crop/'
+	dir2= '/export/patraval/robo_car_loop2/pg_cam/rect/right_rect_crop/'
 
 
 	for i in range(len(list1)):
+		print(i)
 		left = cv2.imread(list1[i])
 		crop_img1 = left[0:1024, 0:2048] 
 		cv2.imwrite( dir1+"{}.png".format(i) , crop_img1)
@@ -107,15 +110,15 @@ def unpack_files():
 	right = []
 	disparity = []
 
-	left = [line.rstrip('\n') for line in open('/export/patraval/robo_car_loop2/pg_cam/rect/left_rect.txt')]
-	right = [line.rstrip('\n') for line in open('/export/patraval/robo_car_loop2/pg_cam/rect/right_rect.txt')]
+	left = [line.rstrip('\n') for line in open('/export/patraval/robo_car_new_loop_all/zed_front/left.txt')]
+	right = [line.rstrip('\n') for line in open('/export/patraval/robo_car_new_loop_all/zed_front/right.txt')]
 
 	return left, right, disparity
 
 def main():
 	left_list, right_list, disparity_list =  unpack_files()
-	#img_resize(left_list, right_list)
-	crop_img(left_list, right_list)
+	img_resize(left_list, right_list)
+	# crop_img(left_list, right_list)
 	# crop_img_resize(left_list, right_list)
 
 	# compute_disparity()

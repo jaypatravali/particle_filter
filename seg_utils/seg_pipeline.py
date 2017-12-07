@@ -7,17 +7,21 @@ import cv2
 
 class Segmentation_Pipeline():
 	def __init__(self,  cam_type='zed', realtime=False):
+
 		if cam_type is 'zed':
 			odom_file =	'/export/patraval/robo_car_new_loop_all/zed_front/gps/fix.txt'
 			self.initial_offset = 6070
 			self.offset_length = 6634
-		elif cam_type is 'pg': 
-			odom_file = '/export/patraval/robo_car_loop2/pg_cam/gps/fix.txt'
+		elif cam_type is 'pg':
+ 			odom_file = '/export/patraval/robo_car_loop2/pg_cam/gps/fix.txt'
 			self.initial_offset = 5953
 			self.offset_length = 6522
 		
-		self.initial_offset = 1312 #1417
-		self.offset_length =  1360 #6634
+		self.initial_offset = 1312 #pg  #1417 #-- zed
+		self.initial_offset = 1600
+
+		self.offset_length =  6634
+
 
 		# self.initial_offset = 3510
 		# self.offset_length = 6634
@@ -57,8 +61,8 @@ def main():
 	# seg_obj.start_process_realtime2()
 
 	seg_obj = Segmentation_Pipeline(cam_type='pg')
-	# seg_obj.start_process_disk()
-	seg_obj.start_process_realtime2()
+	seg_obj.start_process_disk()
+	# seg_obj.start_process_realtime2()
 
 if __name__ == "__main__":
 	try:  

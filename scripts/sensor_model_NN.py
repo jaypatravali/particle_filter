@@ -6,7 +6,7 @@ import math
 
 def eval_sensor_model(sensor_data, particles, landmarks):
 	sigma_r = 0.2
-	sigma_phi = 0.2
+	sigma_phi = 0.1
 
 	ranges = sensor_data['range']
 	bearing = sensor_data['bearing']
@@ -33,8 +33,8 @@ def eval_sensor_model(sensor_data, particles, landmarks):
 			ptheta = particle['theta']
 
 			meas_range_exp = np.sqrt( (lx - px)**2 + (ly - py)**2 )
-			meas_bearing_exp = math.atan2((ly - py),(lx - px)) - ptheta
-			meas_likelihood = scipy.stats.norm.pdf(meas_range, meas_range_exp, sigma_r) * scipy.stats.norm.pdf(meas_bearing, meas_bearing_exp, sigma_phi)
+			#meas_bearing_exp = math.atan2((ly - py),(lx - px)) - ptheta
+			meas_likelihood = scipy.stats.norm.pdf(meas_range, meas_range_exp, sigma_r) #* scipy.stats.norm.pdf(meas_bearing, meas_bearing_exp, sigma_phi)
 			all_meas_likelihood = all_meas_likelihood * meas_likelihood
 		weights.append(all_meas_likelihood)
 

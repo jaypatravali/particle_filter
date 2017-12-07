@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from motion_model import sample_odometry_motion_model
 # from sensor_model import eval_sensor_model # weighting_model
-from sensor_model_NN import eval_sensor_model
+from sensor_model import eval_sensor_model
 
 from resampler import resample_particles, resample_particles_LV
 from plotter import plot_state, mean_pose
@@ -63,7 +63,7 @@ class Particle_Filter():
             print("Current TimeStep: ", timestep)
             # raw_input("Press Enter to continue...")
         plot_trajectories(odom_readings, curr_pose_x,curr_pose_y ,landmarks, self.map_limits, sim_odometry)
-        plot_on_maps(curr_pose_x, curr_pose_y)
+        plot_on_maps(odom_readings, curr_pose_x, curr_pose_y)
         plt.show('hold')
 
     def process_realtime(self, num_particles):
@@ -72,20 +72,21 @@ class Particle_Filter():
         particles, landmarks = self.initialize_particles_landmarks(num_particles)
         sensor_readings, odom_readings  = self.read_data_disk()
         vis = Visualization(landmarks, self.map_limits, sensor_readings, odom_readings)
-        seg_obj = seg_pipeline.Segmentation_Pipeline(self.cam_type, realtime= True)
-        particles = sample_odometry_motion_model(sensor_readings[0, 'odometry'], particles, self.add_noise)
+        print(self.cam_type)
+        seg_obj = seg_pipeline.Segmentation_Pipeline(cam_type='pg', realtime= True)
+        particles = sample_odometry_motion_model(sensor_readings[0, 'odometry'], particles, self.add_noise, 0 )
 
         for timestep in range(1, len(sensor_readings) / 2):
             # plot_state(particles, landmarks, map_limits)
             # curr_mean = mean_pose(particles)
             # curr_pose_x.append(curr_mean[0])
             # curr_pose_y.append(curr_mean[1])
-            new_particles = sample_odometry_motion_model(sensor_readings[timestep, 'odometry'], particles, self.add_noise)
+            new_particles = sample_odometry_motion_model(sensor_readings[timestep, 'odometry'], particles, self.add_noise, timestep)
             curr_mean = mean_pose(new_particles)
             curr_pose_x.append(curr_mean[0])
             curr_pose_y.append(curr_mean[1])
-            # vis.robot_environment(timestep, new_particles, curr_mean)
-            vis.debugger(timestep,  curr_mean)
+            vis.robot_environment(timestep, new_particles, curr_mean)
+            # vis.debugger(timestep,  curr_mean , particles)
             seg_obj.start_process_realtime(timestep)
             # predict particles by sampling from motion model with odometry info
             # if timestep==0:
@@ -95,11 +96,9 @@ class Particle_Filter():
             #     errors = data_association(sensor_readings[timestep, 'sensor'], new_particles, particles, landmarks, args.DA, cov_noise, sensor_readings[timestep, 'odometry'])
 
             weights = eval_sensor_model(sensor_readings[timestep, 'sensor'], new_particles, landmarks)
-            
             # weights = weighting_model(errors)
-
             particles = resample_particles(new_particles, weights)
-            print("Current TimeStep: ", timestep)
+            # print("Current TimeStep: ", timestep)
             # raw_input("Press Enter to continue...")
         # plot_trajectories(odom_readings, curr_pose_x,curr_pose_y ,landmarks, self.map_limits)
         # plot_on_maps(curr_pose_x, curr_pose_y)
@@ -129,11 +128,15 @@ class Particle_Filter():
                 particle = dict()
                 # draw x,y and theta coordinate from car starting position
                 """zed straight"""
-                # particle['x'], particle['y'] = 177.03757970060997,72.711216426459998
-                # particle['theta'] = 1.3540745849092297   ([106.67983715984272, 259.16103693684363], -1.4253166861206177)
+                #particle['x'], particle['y'] = 177.03757970060997,72.711216426459998
+                #particle['theta'] = 1.3540745849092297  # ([106.67983715984272, 259.16103693684363], -1.4253166861206177)
                 """pg loop"""
-                particle['x'], particle['y'] = 106.67983715984272, 259.16103693684363
-                particle['theta'] =  -1.4253166861206177  
+                # particle['x'], particle['y'] = 106.67983715984272, 259.16103693684363
+                # particle['theta'] =  -1.4253166861206177  
+
+                """pg corner"""
+                particle['x'], particle['y'] = 126.36463623279457, 197.40703201640946
+                particle['theta'] = 3.077658478440323
 
                 """zed loop"""
                 # particle['x'], particle['y'] =  112.21525525427808, 249.03124386039127 

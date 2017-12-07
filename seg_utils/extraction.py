@@ -12,6 +12,7 @@ class Extraction():
 			self.net_blend_file = '/export/patraval/robo_car_new_loop_all/zed_front/snip_loop/network_blend.txt'
 			self.disparity_file = '/export/patraval/robo_car_new_loop_all/zed_front/snip_loop/disparity.txt'
 			self.resize_height, self.resize_width = 640, 1280
+			self.disparity_cutoff =  1356.8
 		elif cam_type is 'pg':
 			# self.out_file = '/export/patraval/robo_car_loop2/pg_cam/snip_loop/left_test.txt'
 			# self.net_blend_file = '/export/patraval/robo_car_loop2/pg_cam/snip_loop/network_blend.txt'
@@ -19,34 +20,34 @@ class Extraction():
 			self.out_file = '/export/patraval/robo_car_loop2/pg_cam/snip_loop/left_test.txt'
 			self.net_blend_file = '/export/patraval/robo_car_loop2/pg_cam/snip_loop/network_blend.txt'
 			self.disparity_file = '/export/patraval/robo_car_loop2/pg_cam/snip_loop/disparity.txt'
-
-
 			self.resize_height, self.resize_width = 1024, 2048
+			self.disparity_cutoff = 5887.025
 		self.out_list, self.overlay_list, self.disparity_list = self.unpack_files()	
 
 	def execute_extraction(self, index):
-		src, self.overlay, disparity = self.read_img(self.out_list[index], self.overlay_list[index], self.disparity_list[index],1 )
+		src, self.overlay, disparity = self.read_img(self.out_list[index], self.overlay_list[index], self.disparity_list[index], 0 )
 		self.original = src.copy()
 		img = self.process_images(src, disparity)
 		img = self.threshold(img, 0) #Binary threshold
 		img = self.gaussian_blur(img) 
 		img = self.dilation(img, 0)
 		self.pre_filtering(src, img, 0)
-
 		src, img, self.overlay = self.img_resize(src, img, self.overlay)
+		# cv2.imwrite("disparity.png", disparity)
+		# cv2.imwrite("src.png", src)
 		src_clone = src.copy()
 		self.image = src_clone
-		contours = self.get_contours(src_clone, img, 1)
-		contours = self.filter_by_area(src, contours, 1)
-		final_cont, disparity_list, centre_list  =  self.filter_by_disparity(src, disparity, contours, 1)
+		contours = self.get_contours(src_clone, img, 0)
+		contours = self.filter_by_area(src, contours, 0)
+		final_cont, disparity_list, centre_list  =  self.filter_by_disparity(src, disparity, contours,0 )
 	
 		final_cont, disparity_list, centre_list = self.expensive_disparity(final_cont, disparity_list, centre_list)
 		# final_cont, disparity_list, centre_list = self.expensive_x(final_cont, disparity_list, centre_list)
 
 		low_points = self.lowest_point_get(final_cont)
-		print(disparity_list)
+		# print(disparity_list)
 		disparity_list = [i/256 for i in disparity_list]
-		points  = self.compose_point_list(src_clone, disparity_list, low_points, centre_list, 1 )
+		points  = self.compose_point_list(src_clone, disparity_list, low_points, centre_list, 0 )
 		self.extractor_out = src_clone.copy()
 		# self.sorted_idx = self.sort_left_to_right(points, disparity_list)
 		return points
@@ -70,7 +71,7 @@ class Extraction():
 		new_cont = []
 
 		for i in range(len(disparity_list)):
-			if disparity_list[i] > 1356.8:
+			if disparity_list[i] > self.disparity_cutoff:
 				new_d.append(disparity_list[i])
 				new_c.append(centre_list[i])
 				new_cont.append(final_cont[i])
@@ -97,7 +98,7 @@ class Extraction():
 		vis = np.concatenate(( self.overlay, vis), axis=1)
 		cv2.imshow("Real-Time",vis )
 		# cv2.imshow("Real-Time Overlay",res_overlay)
-		cv2.waitKey(0)
+		cv2.waitKey(1)
 
 
 	def sort_left_to_right(self,  points, disparity_list):

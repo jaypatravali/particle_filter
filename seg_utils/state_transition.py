@@ -217,6 +217,7 @@ class State_Transition():
 		self.prev_odom = pos
 
 
+
 	def point_transformation(self, points, seq):
 		Vehicle_coords = []
 		bearing  = [] 
@@ -225,14 +226,18 @@ class State_Transition():
 
 			seg_pix_X, seg_pix_Y, d = points[i]
 			# d_res = d* (0.6)
-			
+
 			#Pixel Coordinates to Camera Transformation
 			X  =  (seg_pix_X - self.cu )* self.base/d
 			Y =   (seg_pix_Y - self.cv )* self.base/d
 			Z =   self.f*self.base/d
 
-			Landmarks_Camera =  np.array([ X, Y, Z, 1])
 
+			# print("disparities taken", d, d*256, Z)
+
+
+			Landmarks_Camera =  np.array([ X, Y, Z, 1])
+			# print(Landmarks_Camera, d)
 			# Pinhole Camera Coordinates to Robot Camera [Static Transform: Camera to zed_front]
 			tranform_matrix  = tf.TransformerROS()
 			R_t= tranform_matrix.fromTranslationRotation(self.cam_trans, self.cam_rot)
@@ -276,12 +281,81 @@ class State_Transition():
 			if i not in self.pop_index:
 				filter_coords.append(Vehicle_coords[i])
 				filter_bearing.append(bearing[i])
+		# 		print("disparities fitlered", points[i][2])
+
+		# print("Total Hits", len(filter_coords))
+
 
 		if self.realtime is True:
 			self.odom_compute_realtime( filter_coords, filter_bearing, self.pos[seq])	
 		else:
 			self.odom_compute( filter_coords, filter_bearing, self.pos[seq])
 		
+
+
+
+	# def contour_transformation(self, contours, seq):
+	# 	Vehicle_coords = []
+	# 	bearing  = [] 
+	# 	self.vehicle_coords_base = []
+	# 	for i in range(len(contours)):
+
+
+	# 			seg_pix_X, seg_pix_Y, d = points[i]
+
+	# 			#Pixel Coordinates to Camera Transformation
+	# 			X  =  (seg_pix_X - self.cu )* self.base/d
+	# 			Y =   (seg_pix_Y - self.cv )* self.base/d
+	# 			Z =   self.f*self.base/d
+
+
+	# 			print("disparities taken", d, d*256, Z)
+
+
+	# 			Landmarks_Camera =  np.array([ X, Y, Z, 1])
+	# 			tranform_matrix  = tf.TransformerROS()
+	# 			R_t= tranform_matrix.fromTranslationRotation(self.cam_trans, self.cam_rot)
+	# 			Landmark_Vehicle = np.dot(  R_t, Landmarks_Camera)
+
+
+
+	# 			# Robot Camera Coordinates to World [odom_combined to base_link]
+	# 			R_t2= tranform_matrix.fromTranslationRotation( self.pos[seq], self.orientation[seq])
+	# 			Landmark_World = np.dot(  R_t2, Landmark_Vehicle)
+
+	# 			rtx = Landmark_World[0] + self.origin_x
+	# 			rty = Landmark_World[1] + self.origin_y
+
+	# 			Car_x = self.origin_x + self.pos[seq][0]
+	# 			Car_y = self.origin_y + self.pos[seq][1]
+
+	# 			bearing.append( math.atan2(Landmark_Vehicle[1],Landmark_Vehicle[0]))
+
+	# 			Landmark_Vehicle_odom = [Landmark_Vehicle[0]+ self.pos[seq][0], Landmark_Vehicle[1]+ self.pos[seq][1] , Landmark_Vehicle[2] + self.pos[seq][2] ]
+	# 			Vehicle_coords.append( Landmark_Vehicle_odom )
+	# 			self.vehicle_coords_base.append(Landmark_Vehicle)
+
+	# 		# self.ground_projections(Vehicle_coords , points, seq)
+
+	# 		self.pop_index = self.radius_filtering(Vehicle_coords)
+	# 		# print(sorted(self.pop_index))
+
+	# 		filter_coords = []	
+	# 		filter_bearing = []
+	# 		for i in range(len(Vehicle_coords)):
+	# 			if i not in self.pop_index:
+	# 				filter_coords.append(Vehicle_coords[i])
+	# 				filter_bearing.append(bearing[i])
+	# 				print("disparities fitlered", points[i][2])
+
+	# 		print("Total Hits", len(filter_coords))
+
+
+	# 		if self.realtime is True:
+	# 			self.odom_compute_realtime( filter_coords, filter_bearing, self.pos[seq])	
+	# 		else:
+	# 			self.odom_compute( filter_coords, filter_bearing, self.pos[seq])
+			
 
 
 
