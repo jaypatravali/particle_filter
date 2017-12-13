@@ -13,7 +13,10 @@ class Segmentation_Pipeline():
 			self.initial_offset = 6070
 			self.offset_length = 6634
 		elif cam_type is 'pg':
- 			odom_file = '/export/patraval/robo_car_loop2/pg_cam/gps/fix.txt'
+ 			# odom_file = '/export/patraval/robo_car_loop2/pg_cam/gps/fix.txt'
+ 			odom_file = '/export/patraval/robo_loop_pg_only/pg_cam/gps/fix.txt'
+
+ 			
 			self.initial_offset = 5953
 			self.offset_length = 6522
 		
@@ -55,14 +58,23 @@ class Segmentation_Pipeline():
 
 
 
+	def start_process_cluster_realtime2(self, index=None):
+		for index in range(self.initial_offset, self.offset_length):
+			print("Processing: ", index)
+			points, points_disp  = self.extractor.execute_extraction_cluster(index)
+			self.transformer.cluster_transformation(points, points_disp, index)
+			# self.extractor.display_final_image(self.transformer.vehicle_coords_base, self.transformer.pop_index, points)
+
+
+
 def main():
 
-	# seg_obj = Segmentation_Pipeline(realtime=True)
+	# seg_obj = Segmentation_Pipeline(cam_type='pg', realtime=True)
 	# seg_obj.start_process_realtime2()
 
 	seg_obj = Segmentation_Pipeline(cam_type='pg')
 	seg_obj.start_process_disk()
-	# seg_obj.start_process_realtime2()
+	# seg_obj.start_process_cluster_realtime2()
 
 if __name__ == "__main__":
 	try:  
@@ -73,12 +85,3 @@ if __name__ == "__main__":
 		sys.exit()
 
 
-
-# def start_process_realtime(self):
-# 	for i in range(70, len(self.extractor.out_list)):
-# 		points  = self.extractor.execute_extraction(i)
-# 		self.transformer.point_transformation(points, i+6000)
-# 		print("Processed: ", i+ 6000)
-# 		self.extractor.display_final_image(self.transformer.vehicle_coords_base, self.transformer.pop_index, points)
-# 		# print("yo", self.transformer.sensor_readings, self.transformer.odom_readings)
-# 		# return self.transformer.sensor_readings, self.transformer.odom_readings

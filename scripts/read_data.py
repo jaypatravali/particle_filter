@@ -19,7 +19,7 @@ def read_world(filename):
 
     return landmarks
 
-def read_sensor_data(filename):
+def read_sensor_data(filename, motion_model=None):
     # Reads the odometry and sensor readings from a file.
     #
     # The data is returned in a dict where the u_t and z_t are stored
@@ -44,36 +44,68 @@ def read_sensor_data(filename):
     first_time = True
     timestamp = 0
     f = open(filename)
+    print(motion_model, motion_model)
+    if motion_model == 'velocity':
+        print("yolo", sensor_readings)
 
-    for line in f:
-        
-        line_s = line.split('\n') # remove the new line character
-        line_spl = line_s[0].split(' ') # split the line
-        
-        if (line_spl[0]=='ODOMETRY'):
+        for line in f:
             
-            sensor_readings[timestamp,'odometry'] = {'r1':float(line_spl[1]),'t':float(line_spl[2]),'r2':float(line_spl[3])}
+            line_s = line.split('\n') # remove the new line character
+            line_spl = line_s[0].split(' ') # split the line
             
-            if first_time: 
-                first_time = False
+            if (line_spl[0]=='ODOMETRY'):
                 
-            else: 
-                sensor_readings[timestamp,'sensor'] = {'id':lm_ids,'range':ranges,'bearing':bearings}                
-                lm_ids=[]
-                ranges = []
-                bearings = []
+                sensor_readings[timestamp,'odometry'] = {'v':float(line_spl[1]),'w':float(line_spl[2]),'dt':float(line_spl[3])}
+                
+                if first_time: 
+                    first_time = False
+                    
+                else: 
+                    sensor_readings[timestamp,'sensor'] = {'id':lm_ids,'range':ranges,'bearing':bearings}                
+                    lm_ids=[]
+                    ranges = []
+                    bearings = []
 
-            timestamp = timestamp+1
-           
-        if(line_spl[0]=='SENSOR'):
-            
-            lm_ids.append(int(line_spl[1]))    
-            ranges.append(float(line_spl[2]))
-            bearings.append(float(line_spl[3]))
-                              
-        sensor_readings[timestamp-1,'sensor'] = {'id':lm_ids,'range':ranges,'bearing':bearings}            
+                timestamp = timestamp+1
+               
+            if(line_spl[0]=='SENSOR'):
+
+                lm_ids.append(int(line_spl[1]))    
+                ranges.append(float(line_spl[2]))
+                bearings.append(float(line_spl[3]))
+                                  
+            sensor_readings[timestamp-1,'sensor'] = {'id':lm_ids,'range':ranges,'bearing':bearings}         
     
+
+    else: 
+        for line in f:
+            line_s = line.split('\n') # remove the new line character
+            line_spl = line_s[0].split(' ') # split the line
+            
+            if (line_spl[0]=='ODOMETRY'):
+                
+                sensor_readings[timestamp,'odometry'] = {'r1':float(line_spl[1]),'t':float(line_spl[2]),'r2':float(line_spl[3])}
+                
+                if first_time: 
+                    first_time = False
+                    
+                else: 
+                    sensor_readings[timestamp,'sensor'] = {'id':lm_ids,'range':ranges,'bearing':bearings}                
+                    lm_ids=[]
+                    ranges = []
+                    bearings = []
+
+                timestamp = timestamp+1
+               
+            if(line_spl[0]=='SENSOR'):
+                
+                lm_ids.append(int(line_spl[1]))    
+                ranges.append(float(line_spl[2]))
+                bearings.append(float(line_spl[3]))
+                                  
+            sensor_readings[timestamp-1,'sensor'] = {'id':lm_ids,'range':ranges,'bearing':bearings}            
     return sensor_readings
+
 
 
 def read_odom(filename):

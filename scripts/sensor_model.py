@@ -63,25 +63,25 @@ def eval_sensor_model(sensor_data, particles, landmarks):
 	uniform_hit = 0.001
 	for particle in particles:
 		all_meas_likelihood = 1.0 #for combining multiple measurements
-		# print("NEXT" )
-		for i in range(len(ranges)):
-			lm_id = closest_landmark(landmarks, ranges[i], bearing[i], particle)
-			meas_range = ranges[i]
-			meas_bearing = bearing[i]
-			lx = landmarks[lm_id][0]
-			ly = landmarks[lm_id][1]
-			px = particle['x']
-			py = particle['y']
-			ptheta = particle['theta']
+		# # print("NEXT" )
+		# for i in range(len(ranges)):
+		# 	lm_id = closest_landmark(landmarks, ranges[i], bearing[i], particle)
+		# 	meas_range = ranges[i]
+		# 	meas_bearing = bearing[i]
+		# 	lx = landmarks[lm_id][0]
+		# 	ly = landmarks[lm_id][1]
+		# 	px = particle['x']
+		# 	py = particle['y']
+		# 	ptheta = particle['theta']
 
-			#calculate expected range measurement
-			meas_range_exp = np.sqrt( (lx - px)**2 + (ly - py)**2 )
-			meas_bearing_exp = math.atan2((ly - py),(lx - px)) - ptheta
-			#evaluate sensor model (probability density function of normal distribution) Ranege + sensor(optional)
-			meas_likelihood = scipy.stats.norm.pdf(meas_range, meas_range_exp, sigma_r) #* scipy.stats.norm.pdf(normalize_angle(meas_bearing - meas_bearing_exp), 0,sigma_phi)
-		# 	#combine (independent) measurements
-			all_meas_likelihood = all_meas_likelihood * meas_likelihood
-			# print(all_meas_likelihoo
+		# 	#calculate expected range measurement
+		# 	meas_range_exp = np.sqrt( (lx - px)**2 + (ly - py)**2 )
+		# 	meas_bearing_exp = math.atan2((ly - py),(lx - px)) - ptheta
+		# 	#evaluate sensor model (probability density function of normal distribution) Ranege + sensor(optional)
+		# 	meas_likelihood = scipy.stats.norm.pdf(meas_range, meas_range_exp, sigma_r) #* scipy.stats.norm.pdf(normalize_angle(meas_bearing - meas_bearing_exp), 0,sigma_phi)
+		#  	#combine (independent) measurements
+		# 	all_meas_likelihood = all_meas_likelihood * meas_likelihood
+		# 	# print(all_meas_likelihoo
 
 		weights.append(uniform_hit + all_meas_likelihood)
 	#normalize weights

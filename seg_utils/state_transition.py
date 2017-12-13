@@ -4,7 +4,13 @@ import math
 import rospy
 import tf 
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+from MeanShift_py import mean_shift as ms
 
+import random;
+from pyclustering.cluster import cluster_visualizer;
+from pyclustering.cluster.optics import optics, ordering_analyser, ordering_visualizer;
+from pyclustering.utils import read_sample, timedcall;
 class State_Transition():
 	""" Convert Pixel Points to Real World Coordinates
 	"""
@@ -15,7 +21,11 @@ class State_Transition():
 		self.camera_calib(cam_type)
 		self.init_origin_state(origin_idx)
 		self.param_init(cam_type)
-
+		self.last_stamp  = 1509713949.363687992
+		# if realtime:
+		# 	plt.ion()
+		# 	fig  = plt.figure()
+		# 	self.ax = Axes3D(fig)
 	def camera_calib(self,cam_type):
 		print("cam_type",cam_type)
 		if cam_type is 'zed':
@@ -46,7 +56,8 @@ class State_Transition():
 			# self.car_orientation = 1.3540745849092297
 			if self.realtime is False:	
 				self.file = open("../map/sensor_data_car_zed.dat",'w') 
-				self.f1 = open("../map/odom_trajectory_car_zed.dat",'w') 
+				self.f1 = open("../map/odom_trajectory_car_zed.dat",'w')
+				self.velocity_zed = open("../map/velocity_sensor_data_car_zed.dat",'w') 
 
 		elif cam_type is 'pg':
 			# self.prev_odom = [177.03757970060997,72.711216426459998]
@@ -55,6 +66,7 @@ class State_Transition():
 			if self.realtime is False:	
 				self.file = open("../map/sensor_data_car_pg.dat",'w') 
 				self.f1 = open("../map/odom_trajectory_car_pg.dat",'w') 
+				self.velocity_pg = open("../map/velocity_sensor_data_car_pg.dat",'w') 
 
 		self.flag = 0
 		self.sensor_readings = dict()
@@ -65,11 +77,18 @@ class State_Transition():
 		self.header = []
 		self.pos  = []
 		self.orientation = []
+		self.linear_vel = [] 
+		self.angular_vel = [] 
+		self.time_stamp = [] 
+
 		odom_list = [line.rstrip('\n').split() for line in open(odom_file)]
 		for i in odom_list:
 			self.header.append([float(i[0]), float(i[1]), float(i[2])  , float(i[10])])
 			self.pos.append((float(i[3]), float(i[4]), float(i[5])))
-			self.orientation.append((float(i[6]), float(i[7]), float(i[8]), float(i[9]))) 
+			self.orientation.append((float(i[6]), float(i[7]), float(i[8]), float(i[9])))
+			self.linear_vel.append((float(i[11]), float(i[12]), float(i[13]))) 
+			self.angular_vel.append((float(i[14]), float(i[15]), float(i[16]))) 
+			self.time_stamp.append( float(i[17]) ) 
 		print("Odometry Loaded")
 
 
@@ -196,8 +215,58 @@ class State_Transition():
 
 		trans = self.euclidean_dist((pos[0], pos[1]),(self.prev_odom[0],  self.prev_odom[1]))
 		relative_lm_heading  = math.atan2(pos[1] - self.prev_odom[1], pos[0] - self.prev_odom[0])
-
 		del_rot = relative_lm_heading - self.car_orientation
+
+
+		for val,angle in zip(landmark_coords, landmark_bearing):
+			range_val = self.euclidean_dist((pos[0], pos[1]), ( val[0], val[1]))
+			bearing = angle
+
+			lm_ids.append(0)    
+			ranges.append(range_val)
+			bearings.append(bearing)
+			# print(range_val, bearing)
+
+
+		self.odom_reading = [pos[0], pos[1]]      
+		self.sensor_readings['odometry'] = {'r1':del_rot,'t':trans,'r2':0}
+		self.sensor_readings['sensor'] = {'id':lm_ids,'range':ranges,'bearing':bearings}            
+
+		self.car_orientation  = relative_lm_heading
+		self.prev_odom = pos
+		print(landmark_coords)
+
+
+
+	def control_compute(self, landmark_coords, landmark_bearing, landmark_ranges, seq):
+
+		v =  np.sqrt( (self.linear_vel[seq][1]**2) + (self.linear_vel[seq][0]**2) + (self.linear_vel[seq][2]**2) )
+		w  = self.angular_vel[seq][2]
+		del_time = self.time_stamp[seq] - self.last_stamp
+
+		odom_read = "ODOMETRY {} {} {}\n".format(v,w, del_time)
+		self.velocity_pg.write(odom_read)
+		for val,angle in zip(landmark_ranges, landmark_bearing):
+			range_val =  val
+			bearing = angle
+			sensor_read = "SENSOR {} {} {}\n".format(0,range_val, bearing)
+			self.velocity_pg.write(sensor_read)
+
+		self.last_stamp  = self.time_stamp[seq]
+
+
+
+	def control_compute_realtime(self, landmark_coords, landmark_bearing, pos):
+		lm_ids =[]
+		ranges=[]
+		bearings=[]
+
+		pos, landmark_coords = self.vis_transform(landmark_coords, pos)
+
+		trans = self.euclidean_dist((pos[0], pos[1]),(self.prev_odom[0],  self.prev_odom[1]))
+		relative_lm_heading  = math.atan2(pos[1] - self.prev_odom[1], pos[0] - self.prev_odom[0])
+		del_rot = relative_lm_heading - self.car_orientation
+
 
 		for val,angle in zip(landmark_coords, landmark_bearing):
 			range_val = self.euclidean_dist((pos[0], pos[1]), ( val[0], val[1]))
@@ -218,10 +287,15 @@ class State_Transition():
 
 
 
+
+
+
+
 	def point_transformation(self, points, seq):
 		Vehicle_coords = []
 		bearing  = [] 
 		self.vehicle_coords_base = []
+		ranges = []
 		for i in range(len(points)):
 
 			seg_pix_X, seg_pix_Y, d = points[i]
@@ -231,7 +305,6 @@ class State_Transition():
 			X  =  (seg_pix_X - self.cu )* self.base/d
 			Y =   (seg_pix_Y - self.cv )* self.base/d
 			Z =   self.f*self.base/d
-
 
 			# print("disparities taken", d, d*256, Z)
 
@@ -263,7 +336,7 @@ class State_Transition():
 			# print("\n")
 			# print("bearing1", math.atan2(Landmark_Vehicle[1],Landmark_Vehicle[0]))
 			bearing.append( math.atan2(Landmark_Vehicle[1],Landmark_Vehicle[0]))
-
+			ranges.append( np.sqrt( (Landmark_Vehicle[1]**2) + (Landmark_Vehicle[0]**2) ))
 			# print("range", np.sqrt( (Landmark_Vehicle[1]**2) + (Landmark_Vehicle[0]**2) ))
 			Landmark_Vehicle_odom = [Landmark_Vehicle[0]+ self.pos[seq][0], Landmark_Vehicle[1]+ self.pos[seq][1] , Landmark_Vehicle[2] + self.pos[seq][2] ]
 			Vehicle_coords.append( Landmark_Vehicle_odom )
@@ -277,10 +350,14 @@ class State_Transition():
 
 		filter_coords = []	
 		filter_bearing = []
+		filter_ranges = []
+
 		for i in range(len(Vehicle_coords)):
 			if i not in self.pop_index:
 				filter_coords.append(Vehicle_coords[i])
 				filter_bearing.append(bearing[i])
+				filter_ranges.append(ranges[i])
+
 		# 		print("disparities fitlered", points[i][2])
 
 		# print("Total Hits", len(filter_coords))
@@ -290,72 +367,147 @@ class State_Transition():
 			self.odom_compute_realtime( filter_coords, filter_bearing, self.pos[seq])	
 		else:
 			self.odom_compute( filter_coords, filter_bearing, self.pos[seq])
+			self.control_compute( filter_coords, filter_bearing, filter_ranges, seq)
 		
 
 
 
-	# def contour_transformation(self, contours, seq):
-	# 	Vehicle_coords = []
-	# 	bearing  = [] 
-	# 	self.vehicle_coords_base = []
-	# 	for i in range(len(contours)):
+	def cluster_transformation(self, points, points_disp, seq):
+		Vehicle_coords = []
+		bearing  = [] 
+		self.vehicle_coords_base = []
+
+		cluster_list = []
+		cluster_list2D = []
+		for i in range(len(points_disp)):
+
+			seg_pix_X, seg_pix_Y, d = points_disp[i]
+
+			#Pixel Coordinates to Camera Transformation
+			X  =  (seg_pix_X - self.cu )* self.base/d
+			Y =   (seg_pix_Y - self.cv )* self.base/d
+			Z =   self.f*self.base/d
+
+			Landmarks_Camera =  np.array([ X, Y, Z, 1])
+			tranform_matrix  = tf.TransformerROS()
+			R_t= tranform_matrix.fromTranslationRotation(self.cam_trans, self.cam_rot)
+			Landmark_Vehicle = np.dot(  R_t, Landmarks_Camera)
+			# print(Landmark_Vehicle)
+			# print([Landmark_Vehicle[0], Landmark_Vehicle[1]], d)
+			cluster_list.append([Landmark_Vehicle[0], Landmark_Vehicle[1], Landmark_Vehicle[2]] )
+			cluster_list2D.append([Landmark_Vehicle[0], Landmark_Vehicle[1]])
+		print("yo",len(cluster_list2D))
+		self.meanshift_temp(cluster_list2D, seq)
+		# self.optics_temp(cluster_list2D)
+
+		# plt.clf()
+		# plt.scatter([i[0] for i in cluster_list], [i[1] for i in cluster_list])
+		# self.ax.scatter([i[0] for i in cluster_list], [i[1] for i in cluster_list], [i[2] for i in cluster_list])
+		# plt.draw()
+		# plt.waitforbuttonpress()
 
 
-	# 			seg_pix_X, seg_pix_Y, d = points[i]
 
-	# 			#Pixel Coordinates to Camera Transformation
-	# 			X  =  (seg_pix_X - self.cu )* self.base/d
-	# 			Y =   (seg_pix_Y - self.cv )* self.base/d
-	# 			Z =   self.f*self.base/d
+	def meanshift_temp(self, point_list, seq):
+		data = np.array( point_list)
+		mean_shifter = ms.MeanShift()
+		mean_shift_result = mean_shifter.cluster(data, kernel_bandwidth = 5)
 
+		original_points =  mean_shift_result.original_points
+		shifted_points = mean_shift_result.shifted_points
+		cluster_assignments = mean_shift_result.cluster_ids
 
-	# 			print("disparities taken", d, d*256, Z)
+		print(np.unique(cluster_assignments))
+		x = original_points[:,0]
+		y = original_points[:,1]
+		Cluster = cluster_assignments
+		centers = shifted_points
 
+		# fig = plt.figure()
+		# ax = fig.add_subplot(111)
+		# scatter = ax.scatter(x,y,c=Cluster,s=50)
+		# for i,j in centers:
+		#     ax.scatter(i,j,s=50,c='red',marker='+')
+		print(centers[0])
+		# ax.set_xlabel('x')
+		# ax.set_ylabel('y')
+		# # plt.colorbar(scatter)
+		# plt.waitforbuttonpress()
 
-	# 			Landmarks_Camera =  np.array([ X, Y, Z, 1])
-	# 			tranform_matrix  = tf.TransformerROS()
-	# 			R_t= tranform_matrix.fromTranslationRotation(self.cam_trans, self.cam_rot)
-	# 			Landmark_Vehicle = np.dot(  R_t, Landmarks_Camera)
-
-
-
-	# 			# Robot Camera Coordinates to World [odom_combined to base_link]
-	# 			R_t2= tranform_matrix.fromTranslationRotation( self.pos[seq], self.orientation[seq])
-	# 			Landmark_World = np.dot(  R_t2, Landmark_Vehicle)
-
-	# 			rtx = Landmark_World[0] + self.origin_x
-	# 			rty = Landmark_World[1] + self.origin_y
-
-	# 			Car_x = self.origin_x + self.pos[seq][0]
-	# 			Car_y = self.origin_y + self.pos[seq][1]
-
-	# 			bearing.append( math.atan2(Landmark_Vehicle[1],Landmark_Vehicle[0]))
-
-	# 			Landmark_Vehicle_odom = [Landmark_Vehicle[0]+ self.pos[seq][0], Landmark_Vehicle[1]+ self.pos[seq][1] , Landmark_Vehicle[2] + self.pos[seq][2] ]
-	# 			Vehicle_coords.append( Landmark_Vehicle_odom )
-	# 			self.vehicle_coords_base.append(Landmark_Vehicle)
-
-	# 		# self.ground_projections(Vehicle_coords , points, seq)
-
-	# 		self.pop_index = self.radius_filtering(Vehicle_coords)
-	# 		# print(sorted(self.pop_index))
-
-	# 		filter_coords = []	
-	# 		filter_bearing = []
-	# 		for i in range(len(Vehicle_coords)):
-	# 			if i not in self.pop_index:
-	# 				filter_coords.append(Vehicle_coords[i])
-	# 				filter_bearing.append(bearing[i])
-	# 				print("disparities fitlered", points[i][2])
-
-	# 		print("Total Hits", len(filter_coords))
+		# fig.savefig("../MeanShift_py/mean_shift_result1")
 
 
-	# 		if self.realtime is True:
-	# 			self.odom_compute_realtime( filter_coords, filter_bearing, self.pos[seq])	
-	# 		else:
-	# 			self.odom_compute( filter_coords, filter_bearing, self.pos[seq])
-			
+		bearing= [ math.atan2(centers[0][1],centers[0][0])]
+		Landmark_Vehicle_odom = [[centers[0][0]+ self.pos[seq][0],centers[0][1]+ self.pos[seq][1]]]
+		self.odom_compute_realtime( Landmark_Vehicle_odom, bearing, self.pos[seq])	
+
+
+	def optics_temp(self, point_list):
+		print("bc")
+		# data = np.array( point_list)
+		sample = point_list
+		# Create OPTICS algorithm for cluster analysis
+		optics_instance = optics(sample, 0.5, 6);
+		# Run cluster analysis
+		optics_instance.process();
+		# Obtain results of clustering
+		# clusters = optics_instance.get_clusters();
+		# noise = optics_instance.get_noise();
+		# # Obtain rechability-distances
+		# ordering = ordering_analyser(optics_instance.get_ordering());
+		# # Visualization of cluster ordering in line with reachability distance.
+		# ordering_visualizer.show_ordering_diagram(ordering);
+
+
+
+		clusters = optics_instance.get_clusters();
+		noise = optics_instance.get_noise();
+
+		visualizer = cluster_visualizer();
+		visualizer.append_clusters(clusters, sample);
+		visualizer.append_cluster(noise, sample, marker = 'x');
+		visualizer.show();
+
+		ordering = optics_instance.get_ordering();
+		analyser = ordering_analyser(ordering);
+
+		ordering_visualizer.show_ordering_diagram(analyser, amount_clusters);
+
+
+		# self.ax.cla()
+			# rtx = Landmark_World[0] + self.origin_x
+			# rty = Landmark_World[1] + self.origin_y
+
+			# Car_x = self.origin_x + self.pos[seq][0]
+			# Car_y = self.origin_y + self.pos[seq][1]
+
+			# bearing.append( math.atan2(Landmark_Vehicle[1],Landmark_Vehicle[0]))
+
+			# Landmark_Vehicle_odom = [Landmark_Vehicle[0]+ self.pos[seq][0], Landmark_Vehicle[1]+ self.pos[seq][1] , Landmark_Vehicle[2] + self.pos[seq][2] ]
+			# Vehicle_coords.append( Landmark_Vehicle_odom )
+			# self.vehicle_coords_base.append(Landmark_Vehicle)
+
+		# self.ground_projections(Vehicle_coords , points, seq)
+
+		# self.pop_index = self.radius_filtering(Vehicle_coords)
+		# # print(sorted(self.pop_index))
+
+		# filter_coords = []	
+		# filter_bearing = []
+		# for i in range(len(Vehicle_coords)):
+		# 	if i not in self.pop_index:
+		# 		filter_coords.append(Vehicle_coords[i])
+		# 		filter_bearing.append(bearing[i])
+		# 		print("disparities fitlered", points[i][2])
+
+		# print("Total Hits", len(filter_coords))
+
+
+		# if self.realtime is True:
+		# 	self.odom_compute_realtime( filter_coords, filter_bearing, self.pos[seq])	
+		# else:
+		# 	self.odom_compute( filter_coords, filter_bearing, self.pos[seq])
+		
 
 
 

@@ -18,14 +18,15 @@ parser.add_argument('--init', default="set", type=str, metavar='N',
                           help='Particle initialized at random or set position')
 parser.add_argument('--cam', default="zed", type=str, metavar='N',
                           help='Choose zed or PG')
-
+parser.add_argument('--dynamics', default="odometry", type=str, metavar='N',
+                          help='Choose dynamics model odometry or velocity')
 
 args = parser.parse_args()
 
 
 def main():
     print("args.noise", args.noise)
-    pf = Particle_Filter(args.init, args.mode, args.play, args.noise, args.cam)
+    pf = Particle_Filter(args.init, args.mode, args.play, args.noise, args.cam, args.dynamics)
 
     if args.play=='realtime':
         pf.process_realtime(args.particles)

@@ -57,12 +57,14 @@ def sample_odometry_motion_model(odometry, particles, add_noise, timestep, sim_o
 def sample_velocity_motion_model(odometry, particles):
 	# (probabilistic motion models Table 5.3
 
+	print(odometry)
 	v = odometry['v']
 	w = odometry['w']
 	delta_time = odometry['dt']
 
 	# the motion noise parameters: [alpha1, alpha2, alpha3, alpha4, alpha5, alpha6 ]
 	noise = [0.025, 0.025, 0.025, 0.025, 0.0125, 0.025]
+	noise = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 
 
 	# standard deviations of motion noise
@@ -79,12 +81,12 @@ def sample_velocity_motion_model(odometry, particles):
 		#sample noisy motions
 		noisy_v = v + np.random.normal(0, sigma_v)
 		noisy_w = w + np.random.normal(0, sigma_w)
-		noisy_gamma = np.random(0, sigma_gamma)
+		noisy_gamma = np.random.normal(0, sigma_gamma)
 
 		#calculate new particle pose
 		new_particle['x'] = particle['x'] - v_w * np.sin(particle['theta']) + v_w * np.sin(particle['theta'] + w*delta_time)
-		new_particle['y'] = particle['y'] + v_w * np.cos(particle['theta'] )- v_w * np.cos(particle['theta'] + w.delta_time)
-		new_particle['theta'] = particle['theta'] +  w * dt + noisy_gamma * dt
+		new_particle['y'] = particle['y'] + v_w * np.cos(particle['theta'] )- v_w * np.cos(particle['theta'] + w*delta_time)
+		new_particle['theta'] = particle['theta'] +  w * delta_time + noisy_gamma * delta_time
 		new_particles.append(new_particle)
 
 	return new_particles
