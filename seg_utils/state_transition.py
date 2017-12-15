@@ -416,8 +416,8 @@ class State_Transition():
 		original_points =  mean_shift_result.original_points
 		shifted_points = mean_shift_result.shifted_points
 		cluster_assignments = mean_shift_result.cluster_ids
-
-		print(np.unique(cluster_assignments))
+		cluster_ids, indices = np.unique(mean_shift_result.cluster_ids, return_index=True)
+		print(cluster_ids, indices)
 		x = original_points[:,0]
 		y = original_points[:,1]
 		Cluster = cluster_assignments
@@ -428,7 +428,7 @@ class State_Transition():
 		# scatter = ax.scatter(x,y,c=Cluster,s=50)
 		# for i,j in centers:
 		#     ax.scatter(i,j,s=50,c='red',marker='+')
-		print(centers[0])
+		print(len(centers), len(x))
 		# ax.set_xlabel('x')
 		# ax.set_ylabel('y')
 		# # plt.colorbar(scatter)

@@ -28,8 +28,8 @@ char string_left[100], string_right[100];
 int main(int argc, char *argv[])
 {
 
-	file_left.open("/export/patraval/robo_car_loop2/pg_cam/left.txt"); 
-	file_right.open("/export/patraval/robo_car_loop2/pg_cam/right.txt"); 
+	file_left.open("/export/patraval/robo_loop_pg_only/pg_cam/left.txt"); 
+	file_right.open("/export/patraval/robo_loop_pg_only/pg_cam/right.txt"); 
 
 	std::string line; 
 	if(!file_left) //Always test the file open.
@@ -110,8 +110,8 @@ for(int i =0; i < filenames_left.size(); ++i)
 		remap(left, left_rect, cam1map1, cam1map2, INTER_LINEAR);
 		remap(right, right_rect, cam2map1, cam2map2, INTER_LINEAR);
 
-		sprintf(string_left, "/export/patraval/robo_car_loop2/pg_cam/rect/left/%d.png", i );
-		sprintf(string_right, "/export/patraval/robo_car_loop2/pg_cam/rect/right/%d.png", i );
+		sprintf(string_left, "/export/patraval/robo_loop_pg_only/pg_cam/rect/left/%d.png", i );
+		sprintf(string_right, "/export/patraval/robo_loop_pg_only/pg_cam/rect/right/%d.png", i );
 
 		imwrite(string_left, left_rect);
 		imwrite(string_right, right_rect);

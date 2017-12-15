@@ -38,7 +38,7 @@ def plot_trajectories(odom_readings, curr_pose_x, curr_pose_y,landmarks, map_lim
 
     odomx = []
     odomy = []
-    for i in range(len(odom_readings)):
+    for i in range(len(curr_pose_x)):
         odomx.append(odom_readings[i][0])
         odomy.append(odom_readings[i][1])
 

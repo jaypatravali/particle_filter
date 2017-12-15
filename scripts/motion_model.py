@@ -51,8 +51,37 @@ def sample_odometry_motion_model(odometry, particles, add_noise, timestep, sim_o
 
 	return new_particles
 
+def sample_odometry_motion_model_v2(odometry, particles, add_noise, timestep, sim_odometry = dict()):
+	# Samples new particle positions, based on old positions, the odometry
+	# measurements and the motion noise
+	# (probabilistic motion models slide 27)
+	delta_rot1 = odometry['r1']
+	delta_trans = odometry['t']
+	delta_rot2 = odometry['r2']
 
+	if add_noise:
+	    # the motion noise parameters: [alpha1, alpha2, alpha3, alpha4]
+		noise = [0.025, 0.025, 0.025, 0.025]
+		# noise = [0.0, 0.0, 0.0, 0.0]
 
+	# standard deviations of motion noise
+	sigma_delta_rot1 = noise[0] * abs(delta_rot1) + noise[1] * delta_trans
+	sigma_delta_trans = noise[2] * delta_trans + noise[3] * (abs(delta_rot1) + abs(delta_rot2))
+	sigma_delta_rot2 = noise[0] * abs(delta_rot2) + noise[1] * delta_trans
+	
+	for particle in particles:
+
+		#sample noisy motions
+		noisy_delta_rot1 = delta_rot1 + np.random.normal(0, sigma_delta_rot1)
+		noisy_delta_trans = delta_trans + np.random.normal(0, sigma_delta_trans)
+		noisy_delta_rot2 = delta_rot2 #+ np.random.normal(0, sigma_delta_rot2)
+
+		#calculate new particle pose
+		particle['x'] = particle['x'] + noisy_delta_trans * np.cos(particle['theta'] + noisy_delta_rot1)
+		particle['y'] = particle['y'] + noisy_delta_trans * np.sin(particle['theta'] + noisy_delta_rot1)
+		particle['theta'] = particle['theta'] + noisy_delta_rot1 + noisy_delta_rot2
+
+	return particles
 
 def sample_velocity_motion_model(odometry, particles):
 	# (probabilistic motion models Table 5.3

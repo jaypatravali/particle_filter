@@ -20,7 +20,7 @@ def eval_sensor_model(sensor_data, particles, landmarks):
 	# particle and landmark positions and sensor measurements
 
 	sigma_r = 0.2
-	sigma_phi = 1000000000
+	sigma_phi = 0.015
 
 		#measured landmark ids and ranges [ known data associations]
 		# ids = sensor_data['id']
@@ -53,8 +53,7 @@ def eval_sensor_model(sensor_data, particles, landmarks):
 
 		# 	weights.append(all_meas_likelihood)
 
-	# #normalize weights
-	# normalizer = sum(weights)
+
 	ids = range(1,len(landmarks)+1)
 	ranges = sensor_data['range']
 	bearing = sensor_data['bearing']
@@ -64,39 +63,30 @@ def eval_sensor_model(sensor_data, particles, landmarks):
 	for particle in particles:
 		all_meas_likelihood = 1.0 #for combining multiple measurements
 		# # print("NEXT" )
-		# for i in range(len(ranges)):
-		# 	lm_id = closest_landmark(landmarks, ranges[i], bearing[i], particle)
-		# 	meas_range = ranges[i]
-		# 	meas_bearing = bearing[i]
-		# 	lx = landmarks[lm_id][0]
-		# 	ly = landmarks[lm_id][1]
-		# 	px = particle['x']
-		# 	py = particle['y']
-		# 	ptheta = particle['theta']
+		for i in range(len(ranges)):
+			lm_id = closest_landmark(landmarks, ranges[i], bearing[i], particle)
+			meas_range = ranges[i]
+			meas_bearing = bearing[i]
+			lx = landmarks[lm_id][0]
+			ly = landmarks[lm_id][1]
+			px = particle['x']
+			py = particle['y']
+			ptheta = particle['theta']
 
-		# 	#calculate expected range measurement
-		# 	meas_range_exp = np.sqrt( (lx - px)**2 + (ly - py)**2 )
-		# 	meas_bearing_exp = math.atan2((ly - py),(lx - px)) - ptheta
-		# 	#evaluate sensor model (probability density function of normal distribution) Ranege + sensor(optional)
-		# 	meas_likelihood = scipy.stats.norm.pdf(meas_range, meas_range_exp, sigma_r) #* scipy.stats.norm.pdf(normalize_angle(meas_bearing - meas_bearing_exp), 0,sigma_phi)
-		#  	#combine (independent) measurements
-		# 	all_meas_likelihood = all_meas_likelihood * meas_likelihood
-		# 	# print(all_meas_likelihoo
+			#calculate expected range measurement
+			meas_range_exp = np.sqrt( (lx - px)**2 + (ly - py)**2 )
+			meas_bearing_exp = math.atan2((ly - py),(lx - px)) - ptheta
+			#evaluate sensor model (probability density function of normal distribution) Ranege + sensor(optional)
+			meas_likelihood = scipy.stats.norm.pdf(meas_range, meas_range_exp, sigma_r) * scipy.stats.norm.pdf(normalize_angle(meas_bearing - meas_bearing_exp), 0,sigma_phi)
+		 	#combine (independent) measurements
+			all_meas_likelihood = all_meas_likelihood * meas_likelihood
 
 		weights.append(uniform_hit + all_meas_likelihood)
-	#normalize weights
 
-	# weights = []
-	# ones_list = np.ones((1,len(particles)))
 
-	# weights = ones_list.tolist()
 	normalizer = sum(weights)
-
-
 	if(normalizer==0):
 		print("normalizer", normalizer)
-		# print("weights bwfore", weights)
-
 		normalizer = len(particles)
 		weights = [1.0]* len(particles)
 
@@ -104,9 +94,6 @@ def eval_sensor_model(sensor_data, particles, landmarks):
 		normalizer = np.float64(normalizer)
 
 	weights = weights / normalizer
-
-	# print("weights" ,weights)
-
 
 	return weights
 

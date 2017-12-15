@@ -34,6 +34,58 @@ def mean_pose(particles):
     return [mean_x, mean_y, mean_theta]
 
 
+# def weighted_average_pose(weights, particles):
+#     """ Implements time-window averaged pose"""
+
+#     sort_weights = sorted(weights)
+
+#     sorted_weights[-1]
+
+#     #calculate average coordinates
+#     mean_x = np.mean(xs)
+#     mean_y = np.mean(ys)
+#     mean_theta = np.arctan2(np.mean(vys_theta), np.mean(vxs_theta))
+#     return [mean_x, mean_y, mean_theta]
+
+
+def robust_mean(weights, particles):
+    """ Implements time-window averaged pose"""
+
+
+    sorted_idx = sorted(range(len(weights)), key=lambda k: weights[k])
+    xs = []
+    ys = []
+
+    # save unit vectors corresponding to particle orientations 
+    vxs_theta = []
+    vys_theta = []
+
+    for i in range(1,5):
+        xs.append(particles[sorted_idx[-i]]['x'])
+        ys.append(particles[sorted_idx[-i]]['y'])
+        #make unit vector from particle orientation
+        vxs_theta.append(np.cos(particles[sorted_idx[-i]]['theta']))
+        vys_theta.append(np.sin(particles[sorted_idx[-i]]['theta']))
+
+    mean_x = np.mean(xs)
+    mean_y = np.mean(ys)
+    mean_theta = np.arctan2(np.mean(vys_theta), np.mean(vxs_theta))
+    return [mean_x, mean_y, mean_theta]
+
+
+
+
+def max_weight_pose(weights, particles):
+    """ Implements time-window averaged pose"""
+
+
+    sorted_idx = sorted(range(len(weights)), key=lambda k: weights[k])
+
+    mean_x = particles[sorted_idx[-1]]['x']
+    mean_y = particles[sorted_idx[-1]]['y']
+    mean_theta = particles[sorted_idx[-1]]['theta']
+    return [mean_x, mean_y, mean_theta]
+
 
 
 def plot_state(particles, landmarks, map_limits):
