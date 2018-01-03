@@ -28,9 +28,6 @@ class Particle_Filter():
         self.cam_type  = cam_type
         self.motion_model = motion_model
 
-
-
-
     # def process_disk(self, num_particles):
     #     curr_pose_x = []
     #     curr_pose_y = []
@@ -92,7 +89,6 @@ class Particle_Filter():
             profiler.stop_profiler(timestep, 'motion_model')
 
                 # new_particles = sample_velocity_motion_model(sensor_readings[timestep, 'odometry'], particles)
-
                 # curr_mean = mean_pose(new_particles)
                 # curr_pose_x.append(curr_mean[0])
                 # curr_pose_y.append(curr_mean[1])
@@ -106,26 +102,29 @@ class Particle_Filter():
 
             profiler.start_profiler()
             particles = resample_particles(new_particles, weights)
-            # raw_input("Press Enter to continue...")
+            profiler.stop_profiler(timestep, 'resampling')
+
+            profiler.start_profiler()
             curr_mean = mean_pose(new_particles)
                 # curr_mean = robust_mean( weights, new_particles)
                 # curr_mean = max_weight_pose( weights, new_particles)
                 # curr_mean = weighted_average_pose(new_particles, weights)
+            # curr_mean = robust_mean(weights, new_particles)
+            # curr_mean = max_weight_pose(weights,new_particles)
             curr_pose_x.append(curr_mean[0])
             curr_pose_y.append(curr_mean[1])
-            vis.robot_environment(timestep, new_particles, curr_mean)
-            profiler.stop_profiler(timestep, 'resampling', True)
+            vis.robot_environment(timestep, new_particles, curr_mean, create_vid=False)
+            profiler.stop_profiler(timestep, 'visualization', True)
+
+
+
             print("Current TimeStep: ", timestep)
+            # raw_input("Press Enter to continue...")
 
         profiler.runtime_plot()
         plot_trajectories(odom_readings, curr_pose_x,curr_pose_y ,landmarks, self.map_limits, sim_odometry)
         plot_on_maps(odom_readings, curr_pose_x, curr_pose_y)
         plt.show('hold')
-
-
-
-
-
 
     def process_realtime(self, num_particles):
         curr_pose_x = []

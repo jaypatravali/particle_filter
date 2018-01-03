@@ -34,7 +34,7 @@ class profiler_tools(object):
 
 		plot_list = []
 		string_list = []
-		symbol_list= [ 'r--' , 'g--', 'b--']
+		symbol_list= [ 'r--' , 'g--', 'b--', '--m']
 		for key, symbol in zip(self.codeblock_dict, symbol_list):
 			p1, = plt.plot(self.timestep_counter, self.codeblock_dict[key], symbol )
 			plot_list.append(p1)

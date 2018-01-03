@@ -2,6 +2,7 @@ import numpy as np
 import cv2
 from matplotlib import pyplot as plt
 from read_disparity import read_disparity
+import math
 
 class Extraction():
 
@@ -14,48 +15,39 @@ class Extraction():
 			self.resize_height, self.resize_width = 640, 1280
 			self.disparity_cutoff =  1356.8
 		elif cam_type is 'pg':
-
-			# self.out_file = '/export/patraval/robo_car_loop2/pg_cam/snip_loop/left_test.txt'
-			# self.net_blend_file = '/export/patraval/robo_car_loop2/pg_cam/snip_loop/network_blend.txt'
-			# self.disparity_file = '/export/patraval/robo_car_loop2/pg_cam/snip_loop/disparity.txt'
 			self.out_file = '/export/patraval/robo_loop_pg_only/pg_cam/snip_loop/left_test.txt'
 			self.net_blend_file = '/export/patraval/robo_loop_pg_only/pg_cam/snip_loop/network_blend.txt'
 			self.disparity_file = '/export/patraval/robo_loop_pg_only/pg_cam/snip_loop/disparity.txt'
-
-
-
-
-
 			self.resize_height, self.resize_width = 1024, 2048
 			self.disparity_cutoff = 5887.025
 		self.out_list, self.overlay_list, self.disparity_list = self.unpack_files()	
 
 	def execute_extraction(self, index):
-		src, self.overlay, disparity = self.read_img(self.out_list[index], self.overlay_list[index], self.disparity_list[index], 0 )
-		# cv2.imshow("ello", src)
-		# cv2.waitKey(30)
+		src, self.overlay, disparity = self.read_img(self.out_list[index], self.overlay_list[index], self.disparity_list[index], 0)
+
 		self.original = src.copy()
 		img = self.process_images(src, disparity)
 		img = self.threshold(img, 0) #Binary threshold
 		img = self.gaussian_blur(img) 
 		img = self.dilation(img, 0)
+		img = self.erosion(img, 0)
 		self.pre_filtering(src, img, 0)
 		src, img, self.overlay = self.img_resize(src, img, self.overlay)
-		# cv2.imwrite("disparity.png", disparity)
-		# cv2.imwrite("src.png", src)
+		
+		# cv2.imshow("vdfkvmdf", self.overlay)
+		# cv2.waitKey(0)
 		src_clone = src.copy()
 		self.image = src_clone
 		contours = self.get_contours(src_clone, img, 0)
+		# cv2.imshow("vdfkvmdf", img)
+		# cv2.waitKey(0)		
+		pts = np.where(img !=0)
+		print("yo", len(pts[0]))
+
 		contours = self.filter_by_area(src, contours, 0)
-		final_cont, disparity_list, centre_list  =  self.filter_by_disparity(src, disparity, contours,0 )
-		# print(contours)
-		
-		# print(disparity[272, 1212])
+		final_cont, disparity_list, centre_list  =  self.filter_by_disparity(src, disparity, contours, 0 )
 		final_cont, disparity_list, centre_list = self.expensive_disparity(final_cont, disparity_list, centre_list)
 		# final_cont, disparity_list, centre_list = self.expensive_x(final_cont, disparity_list, centre_list)
-
-		# ar,pr, pts= self.get_contour_pixel_list(final_cont, disparity, src)
-		# print(ar, pr)
 
 		low_points = self.lowest_point_get(final_cont)
 		# print(disparity_list)
@@ -77,21 +69,45 @@ class Extraction():
 
 		# self.pre_filtering(src, img, 1)
 		src, img, self.overlay = self.img_resize(src, img, self.overlay)
-		img = self.erosion(img, 0)
+
 
 		points, point_disp_list = self.get_contour_pixel_disp_list(disparity, img)
-		self.extractor_out = src
+		# wqqwq = cv2.resize(img,(640, 480), interpolation = cv2.INTER_CUBIC)
+
+		cv2.imwrite("/home/patraval/Downloads/dlr-spatial_cognition_data/particle_filter/temp_imgs/{}.png".format(index),img)
+		self.intensity_img = img
 		return points, point_disp_list
 
 
 	def get_contour_pixel_disp_list(self, disparity, src):
 		point_list = []
 		point_disp_list = []
-		points = np.where(src != 0)
-		# print(points)
-		for i in range(len(points[0])):
-			point_list.append([points[0][i], points[1][i], disparity[points[0][i], points[1][i]]])
-			point_disp_list.append([points[0][i], points[1][i], disparity[points[0][i], points[1][i]]])
+
+		if np.where(src > 100)[0].size > 5000:
+			src = self.erosion(src, 0)
+
+		length = np.where(src > 100)[0].size
+		factor  = int(math.floor(length/1800))
+		points = np.where(src > 100) # higher intensity values
+		filter_list_x = []
+		filter_list_y = []
+		if factor:
+
+			print(length, factor)
+			for i in range(0, length, factor):
+				filter_list_x.append(points[0][i])
+
+
+			for i in range(0, length, factor):
+				filter_list_y.append(points[1][i])
+
+			for i in range(len(filter_list_y)):
+				point_list.append([filter_list_x[i], filter_list_y[i], disparity[filter_list_x[i], filter_list_y[i]]])
+				point_disp_list.append([filter_list_x[i], filter_list_y[i], disparity[filter_list_x[i], filter_list_y[i]]])
+		else:			
+			for i in range(len(points[0])):
+				point_list.append([points[0][i], points[1][i], disparity[points[0][i], points[1][i]]])
+				point_disp_list.append([points[0][i], points[1][i], disparity[points[0][i], points[1][i]]])
 
 		return point_list, point_disp_list
 
@@ -99,8 +115,6 @@ class Extraction():
 
 	def get_contour_pixel_list(self, contours, disparity, src):
 		point_list = []
-		cv2.imshow("lode", src)
-		cv2.waitKey(0)
 		for cnt,i in zip(contours, range(len(contours))):
 			cimg = np.zeros_like(src)
 			cv2.drawContours(cimg, contours, i, color=255, thickness=-1)
@@ -150,7 +164,7 @@ class Extraction():
 		res_src = cv2.resize(src,(self.resize_width, self.resize_height), interpolation = cv2.INTER_CUBIC)
 		return res_src, res_img, res_overlay
 
-	def display_final_image(self, vehicle_coords, pop_index, points):
+	def display_final_image(self, vehicle_coords, points, pop_index=None):
 		for i in range(len(vehicle_coords)):
 			if i not in pop_index:
 				cv2.arrowedLine(self.image, (points[i][0]+40, points[i][1]+5), (points[i][0]+20, points[i][1]+5), (0,0,255), 1)
@@ -185,6 +199,8 @@ class Extraction():
 		for i,j in enumerate(contours):
 			cx, cy = self.compute_moment(j)
 			disp_value =  disparity[cy, cx]*256
+			cx = cx -2
+			print(cx,cy)
 			centre_list.append([cx,cy])
 			disparity_list.append(disp_value)
 			cv2.putText(src, str(round(disp_value,2)), (cx,cy), cv2.FONT_HERSHEY_SIMPLEX, 6, (255,255, 255), 1)
@@ -309,13 +325,15 @@ class Extraction():
 		cv2.waitKey(0)
 
 	def dilation(self, img, show):
-	 	kernel = np.ones((3,3),np.uint8)	
+		kernel = np.ones((3,3),np.uint8)	
 		dilation = cv2.dilate(img,kernel,iterations = 1)
 		self.display([dilation], ['dilation'] ,show)
 		return dilation
 
-	def erosion(self, img, show):
-	 	kernel = np.ones((3,3),np.uint8)	
+	def erosion(self, img, show, kernel_size= None):
+		kernel = np.ones((3,3),np.uint8)
+		if 	kernel_size:
+			kernel = np.ones((4,4),np.uint8)
 		erosion = cv2.erode(img,kernel,iterations = 1)
 		self.display([erosion], ['erosion'] ,show)
 		return erosion
@@ -336,7 +354,7 @@ class Extraction():
 			M = cv2.moments(cnt)
 			cx = int(M['m10']/M['m00'])
 			cy = int(M['m01']/M['m00'])	
-	 		centroid.append((cx,cy))
+			centroid.append((cx,cy))
 			cv2.circle(src, (cx,cy), 1, (0,255,0) ,1) 
 		self.display([src], ["centroid"], show)
 		return centroid
