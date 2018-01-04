@@ -1,5 +1,7 @@
 import numpy as np
 import math
+from termcolor import colored, cprint
+
 np.random.seed(123)
 
 
@@ -9,24 +11,25 @@ class process_clusters():
 		self.pred_frame = []
 		self.tracked_clusters = []
 		self.first_frame =1
+		self.logged_cluster = {}
+	def initialize_tracker_list(self, current_frame, seq):
+		self.tracked_clusters = []
+		for i in range(len(current_frame)):
+			particle = dict()
+		 	particle['x'] = [current_frame[i][0]]
+			particle['y'] = [current_frame[i][1]]
+			particle['seq'] = [seq]
+			particle['theta'] = 3.0853343280194103
+			particle['count'] = 1
+			self.tracked_clusters.append(particle)	
 
 	def cluster_tracker(self,  odometry, current_frame, seq):
 		if self.first_frame:
-			self.tracked_clusters = []
 			self.first_frame =0
-			for i in range(len(current_frame)):
-				particle = dict()
-			 	particle['x'] = [current_frame[i][0]]
-				particle['y'] = [current_frame[i][1]]
-				particle['seq'] = [seq]
-				particle['theta'] = 3.0853343280194103
-				particle['count'] = 1
-				self.tracked_clusters.append(particle)	
+			self.initialize_tracker_list(current_frame, seq)
 			return None
+
 		pred_clusters = []
-
-		self.log_tracked_clusters(seq)
-
 		for p in self.tracked_clusters:
 			particle = dict()
 		 	particle['x'] = p['x'][-1]
@@ -41,17 +44,11 @@ class process_clusters():
 
 		print( "pred_frame", pred_frame)
 		print("current_frame", current_frame)
-		# print("tracked_clusters")
-		# for i in self.tracked_clusters:
-		# 	print(i)
 		hypothesis = self.nearest_neighbors_search(current_frame, pred_frame)
-		print("****")
-
 		print("hypothesis", hypothesis)
-		for i,j in enumerate(hypothesis):
-			if j>0:
-				print("behen ke")
 
+		for i,j in enumerate(hypothesis):
+			if j>=0:
 			 	self.tracked_clusters[j]['x'] = self.tracked_clusters[j]['x'] + [current_frame[i][0]]
 				self.tracked_clusters[j]['y'] = self.tracked_clusters[j]['y'] + [current_frame[i][1]]
 				self.tracked_clusters[j]['count'] = self.tracked_clusters[j]['count'] +1
@@ -59,7 +56,6 @@ class process_clusters():
 				self.tracked_clusters[j]['seq'] = self.tracked_clusters[j]['seq'] + [seq]
 
 			else:
-				print("lode")
 				particle = dict()
 			 	particle['x'] = [current_frame[i][0]]
 				particle['y']=  [current_frame[i][1]]
@@ -68,33 +64,50 @@ class process_clusters():
 				particle['seq'] = [seq]
 				self.tracked_clusters.append(particle)
 
-		print("*****************")
-		print(self.tracked_clusters)
 		for i in self.tracked_clusters:
 			print(i)
 		print("*************+++++++++++*************")
+		self.process_tracked_clusters(seq)
 
 
 
-	def log_tracked_clusters(self, seq):
+	def process_tracked_clusters(self, seq):
 		print("\n \n")
-
-		print("log_tracked_clusters")
+		remove_keys=  []
+		print colored("process_tracked_clusters", "yellow")
 		for key in self.tracked_clusters:
 			print("key", key)
 			print("seq", seq)
 			diff = seq - key['seq'][-1]
 			print(diff, len(key['seq']))
-			if diff>5 and len(key['seq'])<5:
+			if diff>=5 and len(key['seq'])<5:
 				print("remove")
-				self.tracked_clusters.remove(key)
-			elif diff>5 and len(key['seq'])>5:
+				remove_keys.append(key)
+			elif diff>5 and len(key['seq'])>=5:
 				print("log")
+				self.log_clusters(key)
+				remove_keys.append(key)
 			else:
 				print("continue")
+		for key in remove_keys:
+			print('\n')
+			cprint("<<---removing key", 'red')
+			cprint(key,   "red")
+			self.tracked_clusters.remove(key)
 		print("\n \n")
 
 
+
+	def log_clusters(self, key):
+		for i in range(len(key['seq'])):
+			key_val = key['seq'][i]
+			x_val, y_val = key['x'][i], key['y'][i]
+			if key_val not in self.logged_cluster:
+				self.logged_cluster[key_val] = [[x_val, y_val]]
+			elif key_val in self.logged_cluster:
+				self.logged_cluster[key_val].append([x_val, y_val])
+		print("\n//____________logged cluster__________\\", "green")
+		cprint( self.logged_cluster, 'blue')
 
 
 	def nearest_neighbors_search(self, current_frame, pred_frame):
@@ -138,16 +151,12 @@ class process_clusters():
 
 		# standard deviations of motion noise
 		sigma_delta_rot1 = noise[0] * abs(delta_rot1) + noise[1] * delta_trans
-		sigma_delta_trans = noise[2] * delta_trans + \
-		noise[3] * (abs(delta_rot1) + abs(delta_rot2))
+		sigma_delta_trans = noise[2] * delta_trans + noise[3] * (abs(delta_rot1) + abs(delta_rot2))
 		sigma_delta_rot2 = noise[0] * abs(delta_rot2) + noise[1] * delta_trans
-
-
 		new_particles = []
 		
 		for particle in particles:
 			new_particle = dict()
-
 			#sample noisy motions
 			noisy_delta_rot1 = delta_rot1 + np.random.normal(0, sigma_delta_rot1)
 			noisy_delta_trans = delta_trans + np.random.normal(0, sigma_delta_trans)
