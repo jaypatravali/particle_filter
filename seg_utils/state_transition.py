@@ -20,6 +20,8 @@ class State_Transition():
 	"""
 	def __init__(self, odom_file, cam_type, origin_idx, realtime= None):
 		"""Initialize params"""
+		self.cluster_write = True
+
 		self.realtime = realtime
 		self.file_parser(odom_file)
 		self.camera_calib(cam_type)
@@ -28,7 +30,6 @@ class State_Transition():
 		self.last_stamp  = 1509713949.363687992
 		self.fig_created = True
 		self.clusters = process_clusters()
-		self.cluster_write = True
 		# if realtime:
 		# 	plt.ion()
 		# 	fig  = plt.figure()
@@ -70,8 +71,8 @@ class State_Transition():
 				self.f1 = open("../map/odom_trajectory_car_pg.dat",'w') 
 				self.velocity_pg = open("../map/velocity_sensor_data_car_pg.dat",'w') 
 
-			elif self.realtime is False and self.cluster_write is True:	 
-				self.cluster_file = open("../map/cluster_sensor_data_car_pg.dat",'w') 
+			elif self.realtime is True and self.cluster_write is True:	 
+				self.file = open("../map/cluster_sensor_data_car_pg.dat",'w') 
 
 		self.flag = 0
 		self.sensor_readings = dict()
@@ -372,9 +373,41 @@ class State_Transition():
 		else:
 			self.odom_compute( filter_coords, filter_bearing, self.pos[seq])
 			self.control_compute( filter_coords, filter_bearing, filter_ranges, seq)
+
+
+
+	def odom_compute3(self, landmark_coords, landmark_bearing, pos):
+
+		pos, landmark_coords = self.vis_transform(landmark_coords, pos)
+		trans = self.euclidean_dist((pos[0], pos[1]),(self.prev_odom[0],  self.prev_odom[1]))
+		relative_lm_heading  = math.atan2(pos[1] - self.prev_odom[1], pos[0] - self.prev_odom[0])
+		del_rot = relative_lm_heading - self.car_orientation
+
+		odom_read = "ODOMETRY {} {} {}\n".format(del_rot,trans, 0)
+		self.file.write(odom_read)
+		for val,angle in zip(landmark_coords, landmark_bearing):
+			range_val = self.euclidean_dist((pos[0], pos[1]), ( val[0], val[1]))
+			bearing = angle
+			sensor_read = "SENSOR {} {} {}\n".format(0,range_val, bearing)
+			self.file.write(sensor_read)
+
+		self.car_orientation  = relative_lm_heading
+		self.prev_odom = pos
+
 		
 
-
+	def log_transformations(self, logged_dict, seq):
+		Vehicle_coords = []
+		bearing  = [] 
+		print("\n***************************\n")
+		if seq not in logged_dict:
+			self.odom_compute3( Vehicle_coords, bearing, self.pos[seq])	
+		else:
+			for coordinate in logged_dict[seq]:	
+				bearing.append( math.atan2(coordinate[1],coordinate[0]))
+				Landmark_Vehicle_odom = [coordinate[0]+ self.pos[seq][0], coordinate[1]+ self.pos[seq][1] ]
+				Vehicle_coords.append( Landmark_Vehicle_odom )
+			self.odom_compute3( Vehicle_coords, bearing, self.pos[seq])	
 
 	def cluster_transformation(self, points, points_disp, seq):
 		Vehicle_coords = []
@@ -438,11 +471,9 @@ class State_Transition():
 		# self.control_compute_realtime2(self.pos[seq])
 
 		# print(self.sensor_readings['odometry'])
-		self.clusters.cluster_tracker(self.sensor_readings['odometry'], current_frame, seq)
+		self.logged_cluster = self.clusters.cluster_tracker(self.sensor_readings['odometry'], current_frame, self.pos[seq], seq)
 		# self.optics_temp(cluster_list2D)
 		# self.meanshift_temp(cluster_list, seq)
-
-
 
 	def meanshift_temp(self, point_list, seq):
 		if not point_list:

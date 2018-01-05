@@ -1,6 +1,14 @@
 import numpy as np
 import math
 from termcolor import colored, cprint
+"""
+threshold
+reduce the area for consideration
+--------
+index for theta
+write code for processing datastructure
+"""
+
 
 np.random.seed(123)
 
@@ -12,8 +20,10 @@ class process_clusters():
 		self.tracked_clusters = []
 		self.first_frame =1
 		self.logged_cluster = {}
-	def initialize_tracker_list(self, current_frame, seq):
+	def initialize_tracker_list(self, current_frame, pos, seq):
 		self.tracked_clusters = []
+		self.vehicle = []
+
 		for i in range(len(current_frame)):
 			particle = dict()
 		 	particle['x'] = [current_frame[i][0]]
@@ -22,11 +32,19 @@ class process_clusters():
 			particle['theta'] = 3.0853343280194103
 			particle['count'] = 1
 			self.tracked_clusters.append(particle)	
+		particle = dict()
+	 	particle['x'] = pos[0]
+		particle['y'] = pos[1]
+		particle['seq'] = [seq]
+		particle['theta'] = 3.0853343280194103
+		particle['type'] = 'car_pos'
+		self.vehicle.append(particle)	
 
-	def cluster_tracker(self,  odometry, current_frame, seq):
+
+	def cluster_tracker(self,  odometry, current_frame, pos, seq):
 		if self.first_frame:
 			self.first_frame =0
-			self.initialize_tracker_list(current_frame, seq)
+			self.initialize_tracker_list(current_frame, pos,  seq)
 			return None
 
 		pred_clusters = []
@@ -38,14 +56,19 @@ class process_clusters():
 			pred_clusters.append(particle)
 
 		pred_clusters = self.sample_odometry_motion_model( odometry , pred_clusters, False, seq)
+		self.vehicle = self.sample_odometry_motion_model( odometry,  self.vehicle , False, seq)
+
 		pred_frame = []
 		for particle in pred_clusters:
 			pred_frame.append([particle['x'], particle['y']])
 
 		print( "pred_frame", pred_frame)
 		print("current_frame", current_frame)
+
+
 		hypothesis = self.nearest_neighbors_search(current_frame, pred_frame)
 		print("hypothesis", hypothesis)
+		print("\n \n")
 
 		for i,j in enumerate(hypothesis):
 			if j>=0:
@@ -59,16 +82,17 @@ class process_clusters():
 				particle = dict()
 			 	particle['x'] = [current_frame[i][0]]
 				particle['y']=  [current_frame[i][1]]
-				particle['theta'] = pred_clusters[i]['theta']
+				particle['theta'] = self.vehicle[0]['theta']
 				particle['count'] = 1
 				particle['seq'] = [seq]
 				self.tracked_clusters.append(particle)
 
 		for i in self.tracked_clusters:
 			print(i)
-		print("*************+++++++++++*************")
+		print colored("*************+++++++++++*************", 'cyan')
 		self.process_tracked_clusters(seq)
-
+		print colored("*************+++++++++++*************", 'cyan')
+		return self.logged_cluster
 
 
 	def process_tracked_clusters(self, seq):
@@ -115,6 +139,9 @@ class process_clusters():
 		H = [] 
 		if not current_frame:
 			return []
+		elif not pred_frame:
+			return len(current_frame)*[-1]
+
 		for i in range(len(current_frame)):
 			p1 = pred_frame[0]
 			p2 = current_frame[i]

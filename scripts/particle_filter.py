@@ -12,7 +12,7 @@ from data_association import data_association
 from visualization import Visualization
 from seg_utils import seg_pipeline
 from profiler_tools import profiler_tools
-
+from termcolor import cprint, colored
 
 # add random seed for generating comparable pseudo random numbers
 np.random.seed(123)
@@ -83,7 +83,7 @@ class Particle_Filter():
         profiler = profiler_tools()
         weights  = 1.0/len(particles)
 
-        for timestep in range(1,1000):
+        for timestep in range(1, len(sensor_readings) / 2):
             profiler.start_profiler()
             new_particles = sample_odometry_motion_model(sensor_readings[timestep, 'odometry'], particles, self.add_noise, timestep, sim_odometry)
             profiler.stop_profiler(timestep, 'motion_model')
@@ -118,7 +118,7 @@ class Particle_Filter():
 
 
 
-            print("Current TimeStep: ", timestep)
+            print colored("Current TimeStep: {}".format(timestep), "red")
             # raw_input("Press Enter to continue...")
 
         profiler.runtime_plot()
@@ -246,8 +246,16 @@ class Particle_Filter():
             odom_readings = read_odom("../map/odom_trajectory_car_zed.dat")
 
         if self.motion_model =='odometry' and self.data_type =='car' and self.cam_type =='pg':
-            print("Reading sensor data: {0} from -> {1}".format(self.data_type, self.play)) 
+            print("Reading sensor data: {0} from -> {1}".format(self.data_type, self.play))
+            print("../map/cluster_sensor_data_car_pg.dat") 
             sensor_readings = read_sensor_data("../map/sensor_data_car_pg.dat")
+            print "Reading Ground truth Odometry"
+            odom_readings = read_odom("../map/odom_trajectory_car_pg.dat")
+
+
+        if self.motion_model =='odometry' and self.data_type =='car' and self.cam_type =='pg_cluster':
+            print colored("Reading sensor data: {0} from -> {1} of type **{2}**".format(self.data_type, self.play, self.cam_type), "blue")
+            sensor_readings = read_sensor_data("../map/cluster_sensor_data_car_pg.dat")
             print "Reading Ground truth Odometry"
             odom_readings = read_odom("../map/odom_trajectory_car_pg.dat")
 

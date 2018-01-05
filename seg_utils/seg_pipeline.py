@@ -3,7 +3,6 @@ from state_transition import State_Transition
 import sys
 import cv2
 
-
 class Segmentation_Pipeline():
 
 	def __init__(self,  cam_type='zed', realtime=False):
@@ -23,7 +22,7 @@ class Segmentation_Pipeline():
 		self.initial_offset = 1600  # pg  #1417 #-- zed
 		# self.initial_offset = 1948
 
-		self.offset_length = 6634
+		self.offset_length = 2000
 
 		# self.initial_offset = 3510
 		# self.offset_length = 6634
@@ -58,9 +57,16 @@ class Segmentation_Pipeline():
 
 	def start_process_cluster_realtime2(self, index=None):
 		for index in range(self.initial_offset, self.offset_length):
-			print("Processing: ", index)
+			print("Processing frame: ", index)
 			points, points_disp = self.extractor.execute_extraction_cluster(index)
 			self.transformer.cluster_transformation(points, points_disp, index)
+
+		self.transformer.init_origin_state(self.initial_offset)
+		for index in range(self.initial_offset, self.offset_length):
+			print("logging frame: ", index)
+
+			self.transformer.log_transformations(self.transformer.logged_cluster, index)
+
 			# cv2.imshow("vdfkvmdf", self.extractor.intensity_img)
 			# cv2.waitKey(0)
 			# self.extractor.display_final_image(self.transformer.vehicle_coords_base,  points)
