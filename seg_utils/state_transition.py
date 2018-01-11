@@ -462,7 +462,7 @@ class State_Transition():
 
 		filter_cluster =[]
 		for i in range(len(cluster_list)):
-			if cluster_list[i][2]< 7 and cluster_list[i][2] > -2 and cluster_list[i][0] < 35 and  cluster_list[i][1] < 35  and cluster_list[i][0] > -35 and cluster_list[i][1] > -35:
+			if cluster_list[i][2]< 7 and cluster_list[i][2] > -2 and cluster_list[i][0] < 25 and  cluster_list[i][1] < 25  and cluster_list[i][0] > -25 and cluster_list[i][1] > -25:
 				filter_cluster.append(cluster_list2D[i])
 		# print(len(cluster_list2D),len(filter_cluster))		
 		# self.meanshift_temp(filter_cluster, seq)

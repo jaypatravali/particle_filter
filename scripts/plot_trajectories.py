@@ -76,7 +76,7 @@ def plot_trajectories(odom_readings, curr_pose_x, curr_pose_y,landmarks, map_lim
     else:
         p1, = plt.plot(curr_pose_x,curr_pose_y,  marker='.', markersize=3, color="red")
         p2, = plt.plot(odomx,odomy, marker='.', markersize=3, color="blue")
-        plt.legend([p1,p2], ['PF trajectory', 'Odometry Ground truth'])
+        plt.legend([p1,p2], ['PF trajectory', 'Ground truth'])
     plt.axis(map_limits)
 
     err_sum = 0

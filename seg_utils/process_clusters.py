@@ -75,7 +75,7 @@ class process_clusters():
 			 	self.tracked_clusters[j]['x'] = self.tracked_clusters[j]['x'] + [current_frame[i][0]]
 				self.tracked_clusters[j]['y'] = self.tracked_clusters[j]['y'] + [current_frame[i][1]]
 				self.tracked_clusters[j]['count'] = self.tracked_clusters[j]['count'] +1
-				self.tracked_clusters[j]['theta'] = pred_clusters[i]['theta']
+				self.tracked_clusters[j]['theta'] = pred_clusters[j]['theta']
 				self.tracked_clusters[j]['seq'] = self.tracked_clusters[j]['seq'] + [seq]
 
 			else:

@@ -13,7 +13,7 @@ def sample_odometry_motion_model(odometry, particles, add_noise, timestep, sim_o
 
 	if add_noise:
 	    # the motion noise parameters: [alpha1, alpha2, alpha3, alpha4]
-		noise = [0.025, 0.025, 0.025, 0.025]
+		noise = [0.05, 0.05, 0.05, 0.05]
 		# noise = [0.0, 0.0, 0.0, 0.0]
 	
 		odom_noise =  [0.01,0,0,0.01]
@@ -27,8 +27,7 @@ def sample_odometry_motion_model(odometry, particles, add_noise, timestep, sim_o
 
 	# standard deviations of motion noise
 	sigma_delta_rot1 = noise[0] * abs(delta_rot1) + noise[1] * delta_trans
-	sigma_delta_trans = noise[2] * delta_trans + \
-	noise[3] * (abs(delta_rot1) + abs(delta_rot2))
+	sigma_delta_trans = noise[2] * delta_trans + noise[3] * (abs(delta_rot1) + abs(delta_rot2))
 	sigma_delta_rot2 = noise[0] * abs(delta_rot2) + noise[1] * delta_trans
 	# "move" each particle according to the odometry measurements plus sampled noise
 	# to generate new particle set
@@ -62,7 +61,6 @@ def sample_odometry_motion_model_v2(odometry, particles, add_noise, timestep, si
 	if add_noise:
 	    # the motion noise parameters: [alpha1, alpha2, alpha3, alpha4]
 		noise = [0.025, 0.025, 0.025, 0.025]
-		# noise = [0.0, 0.0, 0.0, 0.0]
 
 	# standard deviations of motion noise
 	sigma_delta_rot1 = noise[0] * abs(delta_rot1) + noise[1] * delta_trans

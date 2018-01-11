@@ -9,12 +9,10 @@ from plotter import plot_state, mean_pose, max_weight_pose, robust_mean
 from read_data import read_world, read_sensor_data, read_odom
 from plot_trajectories import plot_trajectories, plot_trajectories_v2, plot_trajectories_v3, plot_on_maps
 from data_association import data_association
-from visualization import Visualization
+from visualization2 import Visualization
 from seg_utils import seg_pipeline
 from profiler_tools import profiler_tools
 from termcolor import cprint, colored
-
-# add random seed for generating comparable pseudo random numbers
 np.random.seed(123)
 
 class Particle_Filter():
@@ -27,6 +25,8 @@ class Particle_Filter():
         self.add_noise = add_noise
         self.cam_type  = cam_type
         self.motion_model = motion_model
+        self.robot_traj = []
+
 
     # def process_disk(self, num_particles):
     #     curr_pose_x = []
@@ -36,46 +36,29 @@ class Particle_Filter():
     #     vis = Visualization(landmarks, self.map_limits, sensor_readings, odom_readings)
     #     sim_odometry = dict()
     #     if self.data_type is 'sim':
-    #         sim_odometry[0] = {'x':160.52209863 , 'y':7.05611139535,  'theta':0, 'heading':1.2490457723982544, 'trans':0.01 }
-    #     profiler = profiler_tools()
-    #     weights  = 1.0/len(particles)
+    #         sim_odometry[0] = {'x':160.52209863 , 'y':7.05611139535,  'theta':0, 'heading':1.2490457723982544, 'trans':0.01 }        
+    #     for timestep in range(len(sensor_readings) / 2):
 
-    #     for timestep in range(1, len(sensor_readings) / 2):
-    #         # plot_state(particles, landmarks, map_limits)
-    #         profiler.start_profiler()
-
-    #         particles = sample_odometry_motion_model_v2(sensor_readings[timestep, 'odometry'], particles, self.add_noise, timestep, sim_odometry)
-
-    #         curr_mean = mean_pose(particles)
+    #         new_particles = sample_odometry_motion_model(sensor_readings[timestep, 'odometry'], particles,  self.add_noise, timestep, sim_odometry)
+    #         curr_mean = mean_pose(new_particles)
     #         curr_pose_x.append(curr_mean[0])
     #         curr_pose_y.append(curr_mean[1])
-    #         # self.vis.robot_environment(timestep, new_particles, curr_mean)
-    #         vis.robot_environment(timestep, particles, curr_mean)
-
-    #         # vis.debugger(timestep,  curr_mean, particles)
-
-    #         weights = eval_sensor_model(sensor_readings[timestep, 'sensor'], particles, landmarks)
-    #         particles = resample_particles(particles, weights)
+    #         self.robot_traj.append(curr_mean)
+    #         if timestep>10:
+    #             vis.robot_environment(timestep, new_particles, self.robot_traj, curr_mean, create_vid=False)
+    #         # noisy_meas = self.add_noise_measurement(sensor_readings[timestep, 'sensor'])
+    #         weights = eval_sensor_model(sensor_readings[timestep, 'sensor'], new_particles, landmarks)
+    #         particles = resample_particles(new_particles, weights)
     #         print("Current TimeStep: ", timestep)
-    #         # raw_input("Press Enter to continue...")
-    #         print(curr_mean)
-    #         profiler.stop_profiler(timestep)
-    #         # curr_mean = weighted_average_pose(new_particles, weights)
-    #         # curr_pose_x.append(curr_mean[0])
-    #         # curr_pose_y.append(curr_mean[1])
-
-    #     profiler.runtime_plot(timestep)
-    #     plot_trajectories(odom_readings, curr_pose_x,curr_pose_y ,landmarks, self.map_limits, sim_odometry)
-    #     plot_on_maps(odom_readings, curr_pose_x, curr_pose_y)
-    #     plt.show('hold')
-
-
+            # curr_mean = robust_mean( weights, new_particles)   # curr_mean = max_weight_pose( weights, new_particles) # curr_mean = weighted_average_pose(new_particles, weights)
+            # curr_mean = max_weight_pose(weights,new_particles)
 
     def process_disk(self, num_particles):
         curr_pose_x = []
         curr_pose_y = []
         sensor_readings, odom_readings  = self.read_data_disk()
         particles, landmarks = self.initialize_particles_landmarks(num_particles)
+
         vis = Visualization(landmarks, self.map_limits, sensor_readings, odom_readings)
         sim_odometry = dict()
         if self.data_type is 'sim':
@@ -83,19 +66,12 @@ class Particle_Filter():
         profiler = profiler_tools()
         weights  = 1.0/len(particles)
 
-        for timestep in range(1, len(sensor_readings) / 2):
+        for timestep in range(1 ,1600):
             profiler.start_profiler()
             new_particles = sample_odometry_motion_model(sensor_readings[timestep, 'odometry'], particles, self.add_noise, timestep, sim_odometry)
             profiler.stop_profiler(timestep, 'motion_model')
+            # new_particles = sample_velocity_motion_model(sensor_readings[timestep, 'odometry'], particles)
 
-                # new_particles = sample_velocity_motion_model(sensor_readings[timestep, 'odometry'], particles)
-                # curr_mean = mean_pose(new_particles)
-                # curr_pose_x.append(curr_mean[0])
-                # curr_pose_y.append(curr_mean[1])
-                # self.vis.robot_environment(timestep, new_particles, curr_mean)
-                # vis.robot_environment(timestep, new_particles, curr_mean)
-                # vis.debugger(timestep,  curr_mean, particles)
-            
             profiler.start_profiler()
             weights = eval_sensor_model(sensor_readings[timestep, 'sensor'], new_particles, landmarks)
             profiler.stop_profiler(timestep, 'sensor_model')
@@ -106,18 +82,18 @@ class Particle_Filter():
 
             profiler.start_profiler()
             curr_mean = mean_pose(new_particles)
-                # curr_mean = robust_mean( weights, new_particles)
-                # curr_mean = max_weight_pose( weights, new_particles)
-                # curr_mean = weighted_average_pose(new_particles, weights)
-            # curr_mean = robust_mean(weights, new_particles)
-            # curr_mean = max_weight_pose(weights,new_particles)
+
             curr_pose_x.append(curr_mean[0])
             curr_pose_y.append(curr_mean[1])
-            vis.robot_environment(timestep, new_particles, curr_mean, create_vid=False)
+            self.robot_traj.append(curr_mean)
+
+
+            if timestep>7750:
+            	vis.robot_environment(timestep, new_particles, self.robot_traj, curr_mean, create_vid=False)
+            
+
+
             profiler.stop_profiler(timestep, 'visualization', True)
-
-
-
             print colored("Current TimeStep: {}".format(timestep), "red")
             # raw_input("Press Enter to continue...")
 
@@ -125,6 +101,24 @@ class Particle_Filter():
         plot_trajectories(odom_readings, curr_pose_x,curr_pose_y ,landmarks, self.map_limits, sim_odometry)
         plot_on_maps(odom_readings, curr_pose_x, curr_pose_y)
         plt.show('hold')
+
+    def add_noise_measurement(self, sensor_data):
+
+        sigma_r = 0
+        sigma_phi = 0.0
+
+        ranges = sensor_data['range']
+        bearing = sensor_data['bearing']
+        weights = []
+
+        noisy_range = []
+        noisy_bearing =[]
+        for i in range(len(ranges)):
+            noisy_range.append( ranges[i] + np.random.normal(0, sigma_r))
+            noisy_bearing.append(bearing[i] + np.random.normal(0, sigma_phi))
+        sensor_data['range'] = noisy_range
+        sensor_data['bearing'] =noisy_bearing
+        return sensor_data
 
     def process_realtime(self, num_particles):
         curr_pose_x = []
@@ -148,13 +142,6 @@ class Particle_Filter():
             # vis.robot_environment(timestep, new_particles, curr_mean)
             vis.debugger(timestep,  curr_mean , particles)
             # seg_obj.start_process_realtime(timestep)
-            # predict particles by sampling from motion model with odometry info
-            # if timestep==0:
-            #     new_particles =particles
-            #     errors = data_association(sensor_readings[timestep, 'sensor'], new_particles, particles, landmarks, args.DA, cov_noise, sensor_readings[timestep, 'odometry'])
-            # else: 
-            #     errors = data_association(sensor_readings[timestep, 'sensor'], new_particles, particles, landmarks, args.DA, cov_noise, sensor_readings[timestep, 'odometry'])
-
             weights = eval_sensor_model(sensor_readings[timestep, 'sensor'], new_particles, landmarks)
             # weights = weighting_model(errors)
             particles = resample_particles(new_particles, weights)

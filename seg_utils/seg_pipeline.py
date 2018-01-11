@@ -22,7 +22,7 @@ class Segmentation_Pipeline():
 		self.initial_offset = 1600  # pg  #1417 #-- zed
 		# self.initial_offset = 1948
 
-		self.offset_length = 2000
+		self.offset_length = 6000
 
 		# self.initial_offset = 3510
 		# self.offset_length = 6634

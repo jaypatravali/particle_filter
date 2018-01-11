@@ -44,10 +44,7 @@ def read_sensor_data(filename, motion_model=None):
     first_time = True
     timestamp = 0
     f = open(filename)
-    print(motion_model, motion_model)
     if motion_model == 'velocity':
-        print("yolo", sensor_readings)
-
         for line in f:
             
             line_s = line.split('\n') # remove the new line character
@@ -77,7 +74,7 @@ def read_sensor_data(filename, motion_model=None):
             sensor_readings[timestamp-1,'sensor'] = {'id':lm_ids,'range':ranges,'bearing':bearings}         
     
 
-    else: 
+    else:
         for line in f:
             line_s = line.split('\n') # remove the new line character
             line_spl = line_s[0].split(' ') # split the line
