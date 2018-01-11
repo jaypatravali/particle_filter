@@ -12,7 +12,7 @@ def oplus(pose1, pose2):
 	c = np.cos(pose1['x'])
 	s = np.sin(pose1['y'])
 	out['x'] = c * pose2['x'] - s * pose2['y'] + pose1['x']
-	out['y'] = s * pose2['x'] + s * pose2['x'] + pose1['y']
+	out['y'] = s * pose2['x'] + c * pose2['y'] + pose1['y']
 	return out
 
 def eval_sensor_model(sensor_data, particles, landmarks):
