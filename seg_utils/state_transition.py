@@ -29,7 +29,7 @@ class State_Transition():
 		self.param_init(cam_type)
 		self.last_stamp  = 1509713949.363687992
 		self.fig_created = True
-		self.clusters = process_clusters()
+		self.clusters = process_clusters(self.car_orientation)
 		# if realtime:
 		# 	plt.ion()
 		# 	fig  = plt.figure()
@@ -117,6 +117,7 @@ class State_Transition():
 		init_heading = math.atan2(Point_1[1] - Point_0[1], Point_1[0] -Point_0[0])
 		self.prev_odom = Point_0
 		self.car_orientation = init_heading
+
 		print(Point_0, init_heading)
 	def euclidean_dist(self, p1, p2):
 		return(np.sqrt( (p1[0] - p2[0])**2 + (p1[1] - p2[1])**2 ))
@@ -449,27 +450,15 @@ class State_Transition():
 			cluster_list2D.append([Landmark_Vehicle[0], Landmark_Vehicle[1]])
 			global_list_2D.append([local_x, local_y])
 
-     		# print("Landmarks Cam", Landmarks_Camera)
-			# print("Landmarks Vehicle", Landmark_Vehicle)
-
-			# print(points_disp[i], self.f, self.base, self.cu, self.cv)
-			# print("\n***************************")
-
-			# print(Landmark_Vehicle, " ",  seg_pix_X, seg_pix_Y, d )
-
-
-		# print("yo",len(cluster_list2D))
-
 		filter_cluster =[]
 		for i in range(len(cluster_list)):
 			if cluster_list[i][2]< 7 and cluster_list[i][2] > -2 and cluster_list[i][0] < 25 and  cluster_list[i][1] < 25  and cluster_list[i][0] > -25 and cluster_list[i][1] > -25:
 				filter_cluster.append(cluster_list2D[i])
 		# print(len(cluster_list2D),len(filter_cluster))		
 		# self.meanshift_temp(filter_cluster, seq)
+
 		current_frame = self.meanshift_temp(filter_cluster, seq)
 		self.odom_compute_realtime2(self.pos[seq])
-		# self.control_compute_realtime2(self.pos[seq])
-
 		# print(self.sensor_readings['odometry'])
 		self.logged_cluster = self.clusters.cluster_tracker(self.sensor_readings['odometry'], current_frame, self.pos[seq], seq)
 		# self.optics_temp(cluster_list2D)
@@ -477,7 +466,7 @@ class State_Transition():
 
 	def meanshift_temp(self, point_list, seq):
 		if not point_list:
-			return 
+			return []
 
 		data = np.array( point_list)
 		mean_shifter = ms.MeanShift()

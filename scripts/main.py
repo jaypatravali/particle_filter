@@ -20,18 +20,18 @@ parser.add_argument('--cam', default="zed", type=str, metavar='N',
                           help='Choose zed or PG')
 parser.add_argument('--dynamics', default="odometry", type=str, metavar='N',
                           help='Choose dynamics model odometry or velocity')
-
+parser.add_argument('--replay', default=None, type=bool, metavar='N',
+                          help='Choose to replay or run real-time by default')
 args = parser.parse_args()
 
 
 def main():
-    print("args.noise", args.noise)
-    pf = Particle_Filter(args.init, args.mode, args.play, args.noise, args.cam, args.dynamics)
+    pf = Particle_Filter(args)
 
     if args.play=='realtime':
-        pf.process_realtime(args.particles)
+        pf.process_realtime(args)
     else:     
-      pf.process_disk(args.particles)
+      pf.process_disk(args)
 
 
 if __name__ == "__main__":

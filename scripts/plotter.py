@@ -20,12 +20,12 @@ def mean_pose(particles):
     vys_theta = []
 
     for particle in particles:
-        xs.append(particle['x'])
-        ys.append(particle['y'])
+        xs.append(particle[0])
+        ys.append(particle[1])
 
         #make unit vector from particle orientation
-        vxs_theta.append(np.cos(particle['theta']))
-        vys_theta.append(np.sin(particle['theta']))
+        vxs_theta.append(np.cos(particle[2]))
+        vys_theta.append(np.sin(particle[2]))
 
     #calculate average coordinates
     mean_x = np.mean(xs)

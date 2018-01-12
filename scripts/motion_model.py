@@ -35,17 +35,16 @@ def sample_odometry_motion_model(odometry, particles, add_noise, timestep, sim_o
 	new_particles = []
 	
 	for particle in particles:
-		new_particle = dict()
+		new_particle = []
 
 		#sample noisy motions
 		noisy_delta_rot1 = delta_rot1 + np.random.normal(0, sigma_delta_rot1)
 		noisy_delta_trans = delta_trans + np.random.normal(0, sigma_delta_trans)
 		noisy_delta_rot2 = delta_rot2 #+ np.random.normal(0, sigma_delta_rot2)
-
 		#calculate new particle pose
-		new_particle['x'] = particle['x'] + noisy_delta_trans * np.cos(particle['theta'] + noisy_delta_rot1)
-		new_particle['y'] = particle['y'] + noisy_delta_trans * np.sin(particle['theta'] + noisy_delta_rot1)
-		new_particle['theta'] = particle['theta'] + noisy_delta_rot1 + noisy_delta_rot2
+		new_particle +=  [particle[0] + noisy_delta_trans * np.cos(particle[2] + noisy_delta_rot1)]
+		new_particle +=  [particle[1] + noisy_delta_trans * np.sin(particle[2] + noisy_delta_rot1)]
+		new_particle +=  [particle[2] + noisy_delta_rot1 + noisy_delta_rot2]
 		new_particles.append(new_particle)
 
 	return new_particles

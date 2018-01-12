@@ -38,7 +38,7 @@ def plot_trajectories(odom_readings, curr_pose_x, curr_pose_y,landmarks, map_lim
 
     odomx = []
     odomy = []
-    for i in range(len(curr_pose_x)):
+    for i in range(len(odom_readings)):
         odomx.append(odom_readings[i][0])
         odomy.append(odom_readings[i][1])
 
@@ -79,26 +79,26 @@ def plot_trajectories(odom_readings, curr_pose_x, curr_pose_y,landmarks, map_lim
         plt.legend([p1,p2], ['PF trajectory', 'Ground truth'])
     plt.axis(map_limits)
 
-    err_sum = 0
-    #plot differences
-    for i in range(len(curr_pose_x)):
-        err_x =  odomx[i] - curr_pose_x[i]
-        err_y =  odomy[i] - curr_pose_y[i]
-        abs_arr = np.sqrt(err_x**2 + err_y**2)
-        err_sum  = err_sum + abs_arr
+    # err_sum = 0
+    # #plot differences
+    # for i in range(len(curr_pose_x)):
+    #     err_x =  odomx[i] - curr_pose_x[i]
+    #     err_y =  odomy[i] - curr_pose_y[i]
+    #     abs_arr = np.sqrt(err_x**2 + err_y**2)
+    #     err_sum  = err_sum + abs_arr
 
-    mean = err_sum/len(curr_pose_x)
+    # mean = err_sum/len(curr_pose_x)
 
-    bracket_dev = []
+    # bracket_dev = []
 
-    for i in range(len(curr_pose_x)):
-        err_x =  odomx[i] - curr_pose_x[i]
-        err_y =  odomy[i] - curr_pose_y[i]
-        abs_arr = np.sqrt(err_x**2 + err_y**2)
-        bracket_dev.append((abs_arr-mean)**2)
+    # for i in range(len(curr_pose_x)):
+    #     err_x =  odomx[i] - curr_pose_x[i]
+    #     err_y =  odomy[i] - curr_pose_y[i]
+    #     abs_arr = np.sqrt(err_x**2 + err_y**2)
+    #     bracket_dev.append((abs_arr-mean)**2)
 
-    std_dev = np.sqrt(sum(bracket_dev)/ len(bracket_dev))
-    print(std_dev, mean)
+    # std_dev = np.sqrt(sum(bracket_dev)/ len(bracket_dev))
+    # print(std_dev, mean)
 
 
 

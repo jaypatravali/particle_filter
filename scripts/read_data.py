@@ -78,7 +78,10 @@ def read_sensor_data(filename, motion_model=None):
         for line in f:
             line_s = line.split('\n') # remove the new line character
             line_spl = line_s[0].split(' ') # split the line
-            
+                
+            # print(line_spl)
+            # raw_input("Press Enter to continue...")
+
             if (line_spl[0]=='ODOMETRY'):
                 
                 sensor_readings[timestamp,'odometry'] = {'r1':float(line_spl[1]),'t':float(line_spl[2]),'r2':float(line_spl[3])}

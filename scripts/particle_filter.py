@@ -9,22 +9,22 @@ from plotter import plot_state, mean_pose, max_weight_pose, robust_mean
 from read_data import read_world, read_sensor_data, read_odom
 from plot_trajectories import plot_trajectories, plot_trajectories_v2, plot_trajectories_v3, plot_on_maps
 from data_association import data_association
-from visualization2 import Visualization
+from visualization import Visualization
 from seg_utils import seg_pipeline
 from profiler_tools import profiler_tools
 from termcolor import cprint, colored
 np.random.seed(123)
 
 class Particle_Filter():
-    def __init__(self,  init_mode, data_type, play, add_noise, cam_type, motion_model):
+    def __init__(self,  args):
         # initialize the particles
-        self.init_mode = init_mode
-        self.data_type = data_type
-        self.play = play
+        self.init_mode = args.init
+        self.data_type = args.mode
+        self.play = args.play
         self.map_limits = [0, 320, 0, 350]
-        self.add_noise = add_noise
-        self.cam_type  = cam_type
-        self.motion_model = motion_model
+        self.add_noise = args.noise
+        self.cam_type  =  args.cam
+        self.motion_model = args.dynamics
         self.robot_traj = []
 
 
@@ -53,20 +53,19 @@ class Particle_Filter():
             # curr_mean = robust_mean( weights, new_particles)   # curr_mean = max_weight_pose( weights, new_particles) # curr_mean = weighted_average_pose(new_particles, weights)
             # curr_mean = max_weight_pose(weights,new_particles)
 
-    def process_disk(self, num_particles):
+    def process_disk(self, args):
         curr_pose_x = []
         curr_pose_y = []
         sensor_readings, odom_readings  = self.read_data_disk()
-        particles, landmarks = self.initialize_particles_landmarks(num_particles)
+        particles, landmarks = self.initialize_particles_landmarks(args.particles)
 
         vis = Visualization(landmarks, self.map_limits, sensor_readings, odom_readings)
         sim_odometry = dict()
         if self.data_type is 'sim':
             sim_odometry[0] = {'x':160.52209863 , 'y':7.05611139535,  'theta':0, 'heading':1.2490457723982544, 'trans':0.01 }
         profiler = profiler_tools()
-        weights  = 1.0/len(particles)
 
-        for timestep in range(1 ,1600):
+        for timestep in range(0 ,5549):
             profiler.start_profiler()
             new_particles = sample_odometry_motion_model(sensor_readings[timestep, 'odometry'], particles, self.add_noise, timestep, sim_odometry)
             profiler.stop_profiler(timestep, 'motion_model')
@@ -88,18 +87,16 @@ class Particle_Filter():
             self.robot_traj.append(curr_mean)
 
 
-            if timestep>7750:
-            	vis.robot_environment(timestep, new_particles, self.robot_traj, curr_mean, create_vid=False)
+            vis.robot_environment(timestep, new_particles, self.robot_traj, curr_mean, args.replay)
             
 
 
             profiler.stop_profiler(timestep, 'visualization', True)
             print colored("Current TimeStep: {}".format(timestep), "red")
-            # raw_input("Press Enter to continue...")
 
         profiler.runtime_plot()
         plot_trajectories(odom_readings, curr_pose_x,curr_pose_y ,landmarks, self.map_limits, sim_odometry)
-        plot_on_maps(odom_readings, curr_pose_x, curr_pose_y)
+        # plot_on_maps(odom_readings, curr_pose_x, curr_pose_y)
         plt.show('hold')
 
     def add_noise_measurement(self, sensor_data):
@@ -176,7 +173,6 @@ class Particle_Filter():
 
         if self.init_mode =='set' and self.data_type=='car':
             for i in range(num_particles):
-                particle = dict()
                 # draw x,y and theta coordinate from car starting position
                 """zed straight"""
                 #particle['x'], particle['y'] = 177.03757970060997,72.711216426459998
@@ -186,15 +182,10 @@ class Particle_Filter():
                 # particle['theta'] =  -1.4253166861206177  
 
                 """pg corner"""
-                particle['x'], particle['y'] = 126.36463623279457, 197.40703201640946
-                particle['theta'] = 3.077658478440323
-
+                particle = [126.36463623279457, 197.40703201640946, 3.077658478440323]
                 """zed loop"""
                 # particle['x'], particle['y'] =  112.21525525427808, 249.03124386039127 
                 # particle['theta'] =  -0.8590560204044709 
-                particle['errors'] = []
-                particle['weight'] = 1.0 / num_particles
-
                 particles.append(particle)
            
         if self.init_mode =='rand' and self.data_type=='sim':

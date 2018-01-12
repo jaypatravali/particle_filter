@@ -19,14 +19,14 @@ class Segmentation_Pipeline():
 		self.initial_offset = 5953
 		self.offset_length = 6522
 
-		self.initial_offset = 1600  # pg  #1417 #-- zed
+		self.initial_offset = 6000  # pg  #1417 #-- zed
 		# self.initial_offset = 1948
 
-		self.offset_length = 6000
+		self.offset_length = 7149 	
 
 		# self.initial_offset = 3510
 		# self.offset_length = 6634
-		print(self.initial_offset, 		self.offset_length)
+		print(self.initial_offset, self.offset_length)
 		self.transformer = State_Transition(odom_file,  cam_type, self.initial_offset, realtime)
 		self.extractor = Extraction(cam_type)
 

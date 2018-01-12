@@ -1,9 +1,8 @@
 import numpy as np
+import matplotlib
+matplotlib.use('GTKAgg') 
 import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
-import matplotlib.patches as patches
-
-import cv2
+import time 
 class Visualization():
 
 	def __init__(self, landmarks, map_limits, sensor_readings, odom_readings):
@@ -11,63 +10,80 @@ class Visualization():
 		self.map_limits = map_limits
 		self.sensor_readings = sensor_readings
 		self.odom_readings  = odom_readings
-		# self.plot_setup()
+		self.plot_setup()
 
-	def plot_landmarks(self):
+	def plot_setup(self):
+		plt.ion()
+		self.fig = plt.figure()
+		self.ax = self.fig.add_subplot(111)
+		self.ax.axis(self.map_limits)
+		self.landmark_setup()
+
+	def landmark_setup(self):
 		lx=[]
 		ly=[]
-		plt.axis(self.map_limits)
-
 		for i in range (len(self.landmarks)):
 			lx.append(self.landmarks[i+1][0])
 			ly.append(self.landmarks[i+1][1])
-		plt.plot(lx, ly,  'g*',markersize=5)
+		self.ax.plot(lx, ly,  'g*',markersize=5)
 
 	def vis_particles(self, particles):
 		"Particles in red"
-		xs = []
-		ys = []
-		for particle in particles:
-			xs.append(particle['x'])
-			ys.append(particle['y'])
-		plt.plot(xs, ys, 'r.')
+		particles_obj, = self.ax.plot([x[0] for x in particles], [y[1] for y in particles], 'r.')
+		return particles_obj
 
 	def vis_robot_predictions(self, timestep, mean_pose):
 		"Black Arrows"
 		sensor_data = self.sensor_readings[timestep, 'sensor']
 		ranges = sensor_data['range']
 		bearing = sensor_data['bearing']
+		pred_obj = []
 		for i in range(len(ranges)):
 			x = np.cos(bearing[i]+ mean_pose[2])* ranges[i]
 			y = np.sin(bearing[i] + mean_pose[2])* ranges[i]
-			plt.arrow(mean_pose[0], mean_pose[1], x,y, shape='full', lw=1, length_includes_head=True, head_width=.1)
+			obj = self.ax.arrow(mean_pose[0], mean_pose[1], x,y, shape='full', lw=1, length_includes_head=True, head_width=.1)
+			pred_obj.append(obj)
+		return pred_obj
 
-	def vis_robot_trajectory(self, timestep, robot_trajectory ):
+	def vis_robot_trajectory(self, timestep, mean_pose ):
 		"Robot Trajectory in Blue"
-		for i in range(len(robot_trajectory)):
-			plt.plot(robot_trajectory[i][0],robot_trajectory[i][1],  marker='o', markersize=2, color="blue",  markeredgewidth=0.0)  	
+		self.ax.plot(mean_pose[0],mean_pose[1],  marker='o', markersize=2, color="blue",  markeredgewidth=0.0)  	
 
 	def vis_ground_truth(self, timestep ):
 		"Prints in Green-o"
-		for i in range(timestep):
-			plt.plot(self.odom_readings[i][0],self.odom_readings[i][1],  marker='o', markersize=2, color="green",  markeredgewidth=0.0)  	
+		self.ax.plot(self.odom_readings[timestep][0],self.odom_readings[timestep][1],  marker='o', markersize=2, color="green",  markeredgewidth=0.0)  	
 
-	def robot_environment(self, timestep, particles, robot_trajectory, mean_pose, create_vid =None):
-		plt.clf()
-		plt.ion()
-		self.plot_landmarks()
+
+	def clear_vis(self):
+		self.ax.cla()
+		self.landmark_setup()
+
+	def robot_environment(self, timestep, particles, robot_trajectory, mean_pose,  replay):
+		t1 = time.time()
 		self.vis_ground_truth(timestep)
-		self.vis_robot_trajectory( timestep, robot_trajectory )
-		self.vis_robot_predictions(timestep, mean_pose)
-		self.vis_particles(particles)
+		t2 = time.time()
+		self.vis_robot_trajectory( timestep, mean_pose )
+		t3 = time.time()		
+		pred_obj = self.vis_robot_predictions(timestep, mean_pose)
+		t4 = time.time()		
+		particles_obj =  self.vis_particles(particles)
+		t5 = time.time()		
+		self.fig.canvas.flush_events()
+		if replay:
+			plt.savefig('../videos2/{}.jpg'.format(timestep),dpi=900)
+		t6 = time.time()		
 		
-		create_vid =1
-		if create_vid:
-			plt.savefig('../videos/{}.jpg'.format(timestep),dpi=900)
+		print(" TE1: ", t2-t1)			
+		print(" TE2: ", t3-t2)
+		print(" TE3: ", t4-t3)
+		print(" TE4: ", t5-t4)
+		print(" TE5: ", t6-t5)			
 
+		particles_obj.remove()
+		[i.remove() for i in pred_obj]
 
-		plt.pause(0.00001)
-
+		if timestep% 1000==0:
+			self.clear_vis()
 
 
 	def debugger(self, timestep, mean_pose, particles):
@@ -111,5 +127,7 @@ class Visualization():
 			plt.savefig('../videos/{}.jpg'.format(timestep))
 		plt.pause(0.01)
 
+
 def euclidean_dist(p1, p2):
 		return(np.sqrt( (p1[0] - p2[0])**2 + (p1[1] - p2[1])**2 ))
+

@@ -15,28 +15,29 @@ np.random.seed(123)
 
 class process_clusters():
 
-	def __init__(self):
+	def __init__(self, init_orientation):
 		self.pred_frame = []
 		self.tracked_clusters = []
 		self.first_frame =1
 		self.logged_cluster = {}
+		self.init_orientation = init_orientation
+
 	def initialize_tracker_list(self, current_frame, pos, seq):
 		self.tracked_clusters = []
 		self.vehicle = []
-
 		for i in range(len(current_frame)):
 			particle = dict()
 		 	particle['x'] = [current_frame[i][0]]
 			particle['y'] = [current_frame[i][1]]
 			particle['seq'] = [seq]
-			particle['theta'] = 3.0853343280194103
+			particle['theta'] = self.init_orientation #init heading
 			particle['count'] = 1
 			self.tracked_clusters.append(particle)	
 		particle = dict()
 	 	particle['x'] = pos[0]
 		particle['y'] = pos[1]
 		particle['seq'] = [seq]
-		particle['theta'] = 3.0853343280194103
+		particle['theta'] = self.init_orientation   # init heading
 		particle['type'] = 'car_pos'
 		self.vehicle.append(particle)	
 
